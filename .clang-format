@@ -1,0 +1,16 @@
+---
+# Define the baseline style
+BasedOnStyle: LLVM
+
+# Indentation settings
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+
+# Optional but helpful: Continuation indent (for line breaks in long expressions)
+ContinuationIndentWidth: 4
+
+# Optional but helpful: Indent cases inside a switch statement
+IndentCaseLabels: true
+...
+
