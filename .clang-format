@@ -12,5 +12,14 @@ ContinuationIndentWidth: 4
 
 # Optional but helpful: Indent cases inside a switch statement
 IndentCaseLabels: true
-...
+# Aligns the equals signs of consecutive assignments and enum values
+AlignConsecutiveAssignments: true
 
+
+# Aligns the variable names of consecutive declarations
+AlignConsecutiveDeclarations: true
+
+# Optional: Aligns trailing comments perfectly
+AlignTrailingComments: true
+
+...

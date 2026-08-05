@@ -1,3 +1,10 @@
 CompileFlags:
-  Add: [-Wall,-Wextra,-Wshadow,-fsanitize=address,undefined,-std=c++23]
-  Compiler: gcc
+  Add:
+    - -Wall
+    - -Wextra
+    - -Wshadow
+    - -I
+    - /home/talel/Programming/Projects/websock/include
+    - "-fsanitize=address,undefined"
+    - -std=c++23
+  Compiler: g++

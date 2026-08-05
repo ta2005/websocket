@@ -6,6 +6,8 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include "opcode.hpp"
+
 void usage() { std::print("USAGE"); }
 
 void *get_in_addr(struct sockaddr *sa) {
@@ -14,6 +16,13 @@ void *get_in_addr(struct sockaddr *sa) {
     }
 
     return &(((struct sockaddr_in6 *)sa)->sin6_addr);
+}
+
+void send_close(int socketfd){
+    uint8_t payload[6]={0};
+    payload[0]=0x80|static_cast<uint8_t>(ws::opcode::close);
+    payload[1]=0x80;
+    write(socketfd,payload,6);
 }
 
 
@@ -32,6 +41,7 @@ void send_message(int sockefd){
     memcpy(&payload[6],msg.data(),28);
     write(sockefd,payload,34);
 }
+
 
 int main(int argc, char **argv) {
     std::string_view s = "localhost";
@@ -108,6 +118,8 @@ int main(int argc, char **argv) {
         // Skip the 2-byte unmasked server header and print text
         std::print("Decoded Text: {}\n", &buffer[2]);
     }
+    sleep(2);
+    send_close(socketfd);
 
     close(socketfd);
     freeaddrinfo(res);
