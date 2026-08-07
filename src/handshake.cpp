@@ -1,4 +1,7 @@
 #include "handshake.hpp"
+#include "logger.hpp"
+#include <algorithm>
+#include <cctype>
 #include <expected>
 #include <format>
 
@@ -39,6 +42,15 @@ bool is_field_value(const std::string_view v) {
 }
 
 namespace ws::client {
+
+// Helper for case-insensitive string comparison
+bool iequals(std::string_view a, std::string_view b) {
+    return std::ranges::equal(a, b, [](char c1, char c2) {
+        return std::tolower(static_cast<unsigned char>(c1)) == 
+               std::tolower(static_cast<unsigned char>(c2));
+    });
+}
+
 std::expected<void, std::string_view>
 send_handshake(const TcpSocket &socket, const std::string_view host,
                const std::string_view path) {
@@ -94,15 +106,15 @@ parse_status_line(const std::string_view line) {
     res.version = line.substr(0, sp1);
     // this should suffice for now but i will implement the comsume nbr fnct
     // later
-    if (res.version.starts_with("HTTP/1.1")) {
-        return std::unexpected("Unsupported http version expected 1.1");
+    if (res.version != "HTTP/1.1") {
+        return std::unexpected("invalid http version: expected HTTP/1.1");
     }
     size_t sp2 = line.find(' ', sp1 + 1);
     if (sp2 == std::string_view::npos) {
         return std::unexpected("invalid line:Unable to find the status code");
     }
-    auto st = line.substr(sp1 + 1, sp2 - sp1 + 1);
-    if (((sp2 - sp1 + 1) != 3) || st < "100" || st > "599") {
+    auto st = line.substr(sp1 + 1, sp2 - sp1 - 1);
+    if (((sp2 - sp1 - 1) != 3) || st < "100" || st > "599") {
         return std::unexpected("invalide line:invalid status nbr");
     }
     res.status = (st[2] - '0') + 10 * (st[1] - '0') + 100 * (st[0] - '0');
@@ -142,28 +154,34 @@ parse_headers(const std::string_view headers) {
         if (!is_field_name(key)) {
             return std::unexpected("invalid header:not a field name");
         }
-        if (!is_field_name(key)) {
-            return std::unexpected("invalid header:not a field name");
-        }
         auto value = l->substr(colon_pos + 1);
         value      = drop_space_and_tab(value);
         if (!is_field_value(value)) {
             return std::unexpected("invalid header:not a value name");
         }
+        ws::log::debug("Parsed header: [{}] = [{}]", key, value);
+
         if (iequals(key, "Upgrade")) {
-            if (!res.upgrade.empty())
-                return std::unexpected("Duplicate Upgrade header");
+            if (!res.upgrade.empty()) return std::unexpected("Duplicate Upgrade header");
             res.upgrade = value;
-        } else if (iequals(key, "Connection")) {
-            if (!res.connection.empty())
-                return std::unexpected("Duplicate Connection header");
+        } 
+        else if (iequals(key, "Connection")) {
+            if (!res.connection.empty()) return std::unexpected("Duplicate Connection header");
             res.connection = value;
-        } else if (iequals(key, "Sec-WebSocket-Accept")) {
-            if (!res.accept_key.empty())
-                return std::unexpected("Duplicate Sec-WebSocket-Accept header");
+        }
+        else if (iequals(key, "Sec-WebSocket-Accept")) {
+            if (!res.accept_key.empty()) return std::unexpected("Duplicate Sec-WebSocket-Accept header");
             res.accept_key = value;
         }
+        // Extensions and protocol could technically be comma-separated, but we keep it simple for now
+        else if (iequals(key, "Sec-WebSocket-Extensions")) {
+            res.extensions = value;
+        }
+        else if (iequals(key, "Sec-WebSocket-Protocol")) {
+            res.protocol = value;
+        }
     }
+    ws::log::info("Handshake successfully parsed");
     return res;
 }
 std::expected<HandskaheResult, std::string_view>

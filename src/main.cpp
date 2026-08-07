@@ -2,6 +2,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "handshake.hpp"
 #include "opcode.hpp"
 #include "tcp_socket.hpp"
 
@@ -52,28 +53,16 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    const char *message =
-        (char *)"GET / HTTP/1.1\r\n"
-                "Connection: Upgrade\r\n"
-                "Upgrade: websocket\r\n"
-                "Host: echo.websocket.org\r\n"
-                "Origin: https://www.websocket.org\r\n"
-                "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n"
-                "Sec-WebSocket-Version: 13\r\n"
-                "\r\n";
-
-    auto out = socket->send(message);
-    if (!out) {
-        std::print("{}", out.error());
+    auto hc=ws::client::perform_handshake(*socket, s, "/");
+    if(!hc){
+        std::print("{}", hc.error());
+        return 1;
     }
-    std::print("Handshake sent. Waiting for response...\n\n");
-
-    std::print("Server Response:\n{}\n", socket->read(1024));
-    send_message(*socket);
-    std::print("Server Response:\n{}\n", socket->read(1024));
-
-    // of coure the seq from the srv is valid
+    // send_message(*socket);
+    // std::print("Server Response:\n{}\n", socket->read(1024));
     //
+    // // of coure the seq from the srv is valid
+    // //
     sleep(2);
     send_close(*socket);
 
