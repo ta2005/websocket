@@ -2,6 +2,8 @@
 #include <netdb.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <cerrno>
 
 #include "tcp_socket.hpp"
 
@@ -40,9 +42,20 @@ TcpSocket::connect(const std::string_view host, const std::string_view port) {
         }
         break;
     }
-    if (socketfd == -1) {
-        return std::unexpected("unable to connect");
-    }
+	//
+	//    if (socketfd == -1) {
+	//        return std::unexpected("unable to connect");
+	//    }
+	//    auto flags = fcntl(socketfd,F_GETFL);
+	//    if(flags==-1){
+	// return std::unexpected("unable to get the flags to socket");
+	//    }
+	//    flags=fcntl(socketfd,F_SETFL,flags|O_NONBLOCK);
+	//    if(flags==-1){
+	// return std::unexpected("unable to set non blocking socket");
+	//    }
+
+    freeaddrinfo(res);
     return TcpSocket(socketfd);
 }
 // the move opertors
@@ -56,4 +69,24 @@ TcpSocket &TcpSocket::operator=(TcpSocket &&other) {
     }
     return *this;
 }
+// both of these functions are shit 
+// but they do the job
+ssize_t TcpSocket::send(const std::span<const uint8_t> buf) const{
+    return ::write(this->m_fd, buf.data(), buf.size());
+}
+
+ssize_t TcpSocket::send(const std::string_view buf) const{
+    auto bytes = std::span<const uint8_t>(
+        reinterpret_cast<const uint8_t*>(buf.data()), 
+        buf.size()
+    );
+    return send(bytes);
+}
+std::string TcpSocket::read(int max_len) const{
+    std::string s;
+    s.resize(max_len);
+    ::read(m_fd,s.data(),max_len);
+    return s;
+}
+
 } // namespace ws

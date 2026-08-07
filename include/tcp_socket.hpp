@@ -3,6 +3,9 @@
 
 #include <expected>
 #include <string_view>
+#include <string>
+#include <span>
+#include <cstdint>
 
 namespace ws {
 class TcpSocket {
@@ -11,16 +14,20 @@ class TcpSocket {
     TcpSocket(int fd) : m_fd{fd} {}
 
   public:
-    // these will be in the connect method
-    // TcpSocket(std::string_view uri);
     TcpSocket(const std::string_view host, const std::string_view port);
-    // TcpSocket();
     TcpSocket(TcpSocket &&);
     TcpSocket &operator=(TcpSocket &&);
     TcpSocket(const TcpSocket &)            = delete;
     TcpSocket &operator=(const TcpSocket &) = delete;
     ~TcpSocket();
     int get_fd() const { return m_fd; }
+    operator bool(){
+	return m_fd!=-1;
+    }
+    // i don't maybe i will change the interface later
+    ssize_t send(const std::span<const uint8_t>) const;
+    ssize_t send(const std::string_view) const;
+    std::string read(int max_len) const;
     // I think i can return std::string as the getaddrinfo strings
     // are statically allocated but further testing is needed
     static std::expected<TcpSocket, std::string_view>
