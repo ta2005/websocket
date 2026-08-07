@@ -25,8 +25,8 @@ class TcpSocket {
 	return m_fd!=-1;
     }
     // i don't maybe i will change the interface later
-    ssize_t send(const std::span<const uint8_t>) const;
-    ssize_t send(const std::string_view) const;
+    std::expected<ssize_t,std::string_view> send(const std::span<const uint8_t>) const;
+    std::expected<ssize_t,std::string_view> send(const std::string_view) const;
     std::string read(int max_len) const;
     // I think i can return std::string as the getaddrinfo strings
     // are statically allocated but further testing is needed

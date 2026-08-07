@@ -12,7 +12,10 @@ void send_close(const ws::TcpSocket& socket){
     uint8_t payload[6]={0};
     payload[0]=0x80|static_cast<uint8_t>(ws::opcode::close);
     payload[1]=0x80;
-    socket.send(payload);
+    auto out=socket.send(payload);
+    if(!out){
+	std::print("{}",out.error());
+    }
 }
 
 
@@ -29,7 +32,10 @@ void send_message(const ws::TcpSocket& socket){
     payload[1]|=l|0x80;
     // a mask of zero does nothing
     memcpy(&payload[6],msg.data(),28);
-    socket.send(payload);
+    auto out=socket.send(payload);
+    if(!out){
+	std::print("{}",out.error());
+    }
 }
 
 
@@ -57,7 +63,10 @@ int main(int argc, char **argv) {
                             "Sec-WebSocket-Version: 13\r\n"
 			    "\r\n";
 
-    socket->send(message);
+    auto out=socket->send(message);
+    if(!out){
+	std::print("{}",out.error());
+    }
     std::print("Handshake sent. Waiting for response...\n\n");
 
     

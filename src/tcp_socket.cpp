@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <cerrno>
+#include <cstring>
 
 #include "tcp_socket.hpp"
 
@@ -71,11 +72,19 @@ TcpSocket &TcpSocket::operator=(TcpSocket &&other) {
 }
 // both of these functions are shit 
 // but they do the job
-ssize_t TcpSocket::send(const std::span<const uint8_t> buf) const{
-    return ::write(this->m_fd, buf.data(), buf.size());
+std::expected<ssize_t,std::string_view> TcpSocket::send(std::span<const uint8_t> data) const {
+    size_t total_sent = 0;
+    while (total_sent < data.size()) {
+        ssize_t sent = ::write(m_fd, data.data() + total_sent, data.size() - total_sent);
+        if (sent < 0) {
+            if (errno == EINTR) continue; // Interrupted by signal, try again
+	    return std::unexpected(std::strerror(errno));
+        }
+        total_sent += sent;
+    }
+    return total_sent;
 }
-
-ssize_t TcpSocket::send(const std::string_view buf) const{
+std::expected<ssize_t,std::string_view> TcpSocket::send(const std::string_view buf) const{
     auto bytes = std::span<const uint8_t>(
         reinterpret_cast<const uint8_t*>(buf.data()), 
         buf.size()
