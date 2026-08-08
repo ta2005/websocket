@@ -1,11 +1,16 @@
 first i will start with a client imp it should be simple 
-i don't need any asio(this is a lie)
+i don't need any asio(this is a lie:it indeed was a lie)
 the public interface will simply be send receive 
 
 asio will be in the next "version"
 i will use my own implmentation or an external lib(maybe i might offer different backends)
 
+-- this is done 
 I will have a tcp class 
 that creates a new socket
 then it will have a connect method
 in the connect method i will attempt the handshake
+
+utf 8 validation 
+sha1
+base64

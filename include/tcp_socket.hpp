@@ -27,6 +27,8 @@ class TcpSocket {
     // i don't maybe i will change the interface later
     std::expected<size_t,std::string_view> send(const std::span<const uint8_t>) const;
     std::expected<size_t,std::string_view> send(const std::string_view) const;
+    std::expected<size_t,std::string_view> send(const std::span<const uint8_t> meta_data,const std::span<const uint8_t>payload) const;
+    std::expected<size_t,std::string_view> send(const std::span<const uint8_t> meta_data,std::string_view payload) const;
     std::string read(int max_len) const;
     std::expected<size_t, std::string_view> read(std::span<uint8_t> buf) const;
     // I think i can return std::string as the getaddrinfo strings

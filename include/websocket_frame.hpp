@@ -1,13 +1,13 @@
 #ifndef WEBSOCKETFRAME_HPP
 #define WEBSOCKETFRAME_HPP
 
-#include <vector>
+#include <span>
 #include <cstdint>
 
 struct  WebSocketFrame{
     bool fin;
     uint8_t opcode;
-    std::vector<uint8_t>payload;
+    std::span<uint8_t>payload;
 };
 
 #endif  

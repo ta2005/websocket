@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    auto hc=ws::client::perform_handshake(*socket, s, "/");
+    auto hc=ws::perform_handshake(*socket, s, "/");
     if(!hc){
         std::print("{}", hc.error());
         return 1;

@@ -4,7 +4,7 @@
 #include "tcp_socket.hpp"
 #include <string_view>
 
-namespace ws::client {
+namespace ws {
 // i will first assuem no erros then will see later on
 struct StatusLine {
     std::string version;

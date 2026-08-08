@@ -41,7 +41,7 @@ bool is_field_value(const std::string_view v) {
     return std::all_of(v.begin(), v.end(), is_txt);
 }
 
-namespace ws::client {
+namespace ws{
 
 // Helper for case-insensitive string comparison
 bool iequals(std::string_view a, std::string_view b) {
