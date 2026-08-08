@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 #include "tcp_socket.hpp"
+#include "logger.hpp"
 
 namespace ws {
 TcpSocket::~TcpSocket() {
@@ -37,11 +38,12 @@ TcpSocket::connect(const std::string_view host, const std::string_view port) {
         //           host, sizeof host);
         // std::print("\033[32mconnection to {}\033[0m\n", host);
         if (::connect(socketfd, p->ai_addr, p->ai_addrlen) == -1) {
-            // std::print("\033[31mfailed to connect to {}\033[0m\n", host);
+            ws::log::error("Failed to connect to {}:{} using protocol {}", host, port, p->ai_protocol);
             close(socketfd);
             socketfd = -1;
             continue;
         }
+        ws::log::info("Successfully connected to {}:{}", host, port);
         break;
     }
     //
@@ -82,7 +84,8 @@ TcpSocket::send(std::span<const uint8_t> data) const {
         if (sent < 0) {
             if (errno == EINTR)
                 continue; // Interrupted by signal, try again
-            return std::unexpected(std::strerror(errno));
+            ws::log::error("TcpSocket::send error: {}", std::strerror(errno));
+            return std::unexpected("TcpSocket::send failed");
         }
         total_sent += sent;
     }
@@ -110,7 +113,8 @@ TcpSocket::read(std::span<uint8_t> buf) const {
         if (bytes_read < 0) {
             if (errno == EINTR)
                 continue; // Interrupted by signal, try again
-            return std::unexpected(std::strerror(errno));
+            ws::log::error("TcpSocket::read error: {}", std::strerror(errno));
+            return std::unexpected("TcpSocket::read failed");
         }
         if (bytes_read == 0) {
             return std::unexpected("Connection closed by peer");
@@ -144,7 +148,8 @@ TcpSocket::send(std::span<const uint8_t> meta_data,
         ssize_t sent = ::writev(m_fd, &io[current_index], iovcnt);
         if (sent < 0) {
             if (errno == EINTR) continue; 
-            return std::unexpected(std::strerror(errno));
+            ws::log::error("TcpSocket::send (writev) error: {}", std::strerror(errno));
+            return std::unexpected("TcpSocket::send (writev) failed");
         }
         total_sent += sent;
 

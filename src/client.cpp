@@ -3,6 +3,7 @@
 #include "handshake.hpp"
 #include "tcp_socket.hpp"
 #include "details/mask_payload.hpp"
+#include "logger.hpp"
 #include <expected>
 
 namespace ws {
@@ -16,8 +17,10 @@ Client::create(const std::string_view host, const std::string_view path,
     }
     auto hk = perform_handshake(*s, host, path);
     if (!hk) {
+        ws::log::error("Handshake failed: {}", hk.error());
         return std::unexpected(hk.error());
     }
+    ws::log::info("Client created and handshake complete");
     return Client(std::move(*s));
 }
 
@@ -36,8 +39,10 @@ Client::send_impl(std::span<const uint8_t> msg, opcode first_op) {
 	std::copy(msg.begin(),msg.begin()+chunk_size,tmp.begin());
 	mask_payload(tmp,mask);
 
+        ws::log::debug("Sending chunk of size {} bytes with opcode {}", chunk_size, static_cast<int>(op));
         auto l    = m_socket.send(meta.span(), tmp);
         if (!l) {
+            ws::log::error("Failed to send chunk: {}", l.error());
             return std::unexpected(l.error());
         }
         msg   = msg.subspan(chunk_size);
@@ -50,8 +55,10 @@ Client::send_impl(std::span<const uint8_t> msg, opcode first_op) {
     auto meta = detail::format_meta(true, true, op, msg.size(), mask);
     mask_payload(tmp,mask);
 
+    ws::log::debug("Sending final chunk of size {} bytes with opcode {}", msg.size(), static_cast<int>(op));
     auto l    = m_socket.send(meta.span(), {tmp.data(),msg.size()});
     if (!l) {
+        ws::log::error("Failed to send final chunk: {}", l.error());
         return std::unexpected(l.error());
     }
     return {};

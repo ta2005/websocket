@@ -10,7 +10,12 @@ I will have a tcp class
 that creates a new socket
 then it will have a connect method
 in the connect method i will attempt the handshake
+did masking 
+fragmentation 
+the send api
 
+-- to bo done 
 utf 8 validation 
 sha1
 base64
+the read api

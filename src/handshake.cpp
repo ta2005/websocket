@@ -101,20 +101,24 @@ parse_status_line(const std::string_view line) {
     }
     size_t sp1 = line.find(' ');
     if (sp1 == std::string_view::npos) {
+        ws::log::error("Invalid status line: Unable to find the HTTP version");
         return std::unexpected("invalid line:Unable to find the version");
     }
     res.version = line.substr(0, sp1);
     // this should suffice for now but i will implement the comsume nbr fnct
     // later
     if (res.version != "HTTP/1.1") {
+        ws::log::error("Invalid HTTP version: Expected HTTP/1.1, got {}", res.version);
         return std::unexpected("invalid http version: expected HTTP/1.1");
     }
     size_t sp2 = line.find(' ', sp1 + 1);
     if (sp2 == std::string_view::npos) {
+        ws::log::error("Invalid status line: Unable to find the status code");
         return std::unexpected("invalid line:Unable to find the status code");
     }
     auto st = line.substr(sp1 + 1, sp2 - sp1 - 1);
     if (((sp2 - sp1 - 1) != 3) || st < "100" || st > "599") {
+        ws::log::error("Invalid status line: Invalid status number '{}'", st);
         return std::unexpected("invalide line:invalid status nbr");
     }
     res.status = (st[2] - '0') + 10 * (st[1] - '0') + 100 * (st[0] - '0');
@@ -128,10 +132,12 @@ parse_headers(const std::string_view headers) {
     auto tmphd       = headers;
     auto status_line = get_line(tmphd).and_then(parse_status_line);
     if (!status_line) {
+        ws::log::error("Failed to parse status line: {}", status_line.error());
         return std::unexpected(status_line.error());
     }
     if (status_line->status != 101) {
-        return std::unexpected("3asab lik t3ib");
+        ws::log::error("Handshake rejected. Server returned status code: {}", status_line->status);
+        return std::unexpected("Handshake rejected: Expected 101 Switching Protocols");
     }
     HandskaheResult res;
     res.line = *status_line;
