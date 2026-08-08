@@ -1,19 +1,26 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
+#include "opcode.hpp"
 #include "tcp_socket.hpp"
+#include <random>
 #include <string_view>
 
 namespace ws {
 class Client {
   private:
-    TcpSocket m_socket;
-    Client(TcpSocket s) : m_socket(std::move(s)) {};
+    TcpSocket    m_socket;
+    std::mt19937 m_rng;
+
+    Client(TcpSocket s)
+        : m_socket(std::move(s)), m_rng(std::random_device{}()) {};
+    std::expected<void, std::string_view> send_impl(std::span<const uint8_t>,
+                                                    opcode) ;
 
   public:
-    std::expected<void, std::string_view> send(const std::string_view) const;
-    std::expected<void, std::string_view> send(std::span<const uint8_t>) const;
-    // next major update this will need to be and enum with an explanation 
+    std::expected<void, std::string_view> send(const std::string_view) ;
+    std::expected<void, std::string_view> send(std::span<const uint8_t>) ;
+    // next major update this will need to be and enum with an explanation
     std::expected<void, std::string_view> close() const;
     // this one should be uri
     static std::expected<Client, std::string_view>
@@ -22,4 +29,4 @@ class Client {
 };
 } // namespace ws
 
-#endif // INCLUDE/home/talel/Programming/Projects/websock/includeclientclient.hpp_
+#endif 

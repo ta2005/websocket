@@ -1,7 +1,8 @@
 #include "client.hpp"
+#include "details/prepare_meta.hpp"
 #include "handshake.hpp"
 #include "tcp_socket.hpp"
-#include "details/prepare_meta.hpp"
+#include "details/mask_payload.hpp"
 #include <expected>
 
 namespace ws {
@@ -21,29 +22,35 @@ Client::create(const std::string_view host, const std::string_view path,
 }
 
 std::expected<void, std::string_view>
-Client::send(std::span<const uint8_t> msg) const {
-    auto tmp = msg;
+Client::send_impl(std::span<const uint8_t> msg, opcode first_op) {
     constexpr int chunk_size = 8 * 1024;
-    bool first = true;
+    bool          first      = true;
+    std::array<uint8_t,chunk_size>tmp;
 
-    while (tmp.size() > chunk_size) {
+    while (msg.size() > chunk_size) {
         // First frame gets the actual opcode, the rest get continuation (0x0)
-        opcode op = first ? opcode::binary : opcode::continuation;
-        
-        auto meta = detail::format_meta(false, true, op, chunk_size, 0);
-        auto l = m_socket.send(meta.span(), tmp.subspan(0, chunk_size));
+        opcode op = first ? first_op : opcode::continuation;
+
+	uint32_t mask = m_rng(); 
+        auto meta = detail::format_meta(false, true, op, chunk_size, mask);
+	std::copy(msg.begin(),msg.begin()+chunk_size,tmp.begin());
+	mask_payload(tmp,mask);
+
+        auto l    = m_socket.send(meta.span(), tmp);
         if (!l) {
             return std::unexpected(l.error());
         }
-        tmp = tmp.subspan(chunk_size); // Shift exactly chunk_size bytes!
+        msg   = msg.subspan(chunk_size);
         first = false;
     }
-    
-    // The final frame! Set FIN=true.
-    opcode op = first ? opcode::binary : opcode::continuation;
-    // CRITICAL BUG FIX: Pass tmp.size(), not chunk_size!
-    auto meta = detail::format_meta(true, true, op, tmp.size(), 0); 
-    auto l = m_socket.send(meta.span(), tmp);
+
+    opcode op   = first ? first_op : opcode::continuation;
+    uint32_t mask = m_rng(); 
+    std::copy(msg.begin(),msg.begin()+msg.size(),tmp.begin());
+    auto meta = detail::format_meta(true, true, op, msg.size(), mask);
+    mask_payload(tmp,mask);
+
+    auto l    = m_socket.send(meta.span(), {tmp.data(),msg.size()});
     if (!l) {
         return std::unexpected(l.error());
     }
@@ -51,44 +58,23 @@ Client::send(std::span<const uint8_t> msg) const {
 }
 
 std::expected<void, std::string_view>
-Client::send(const std::string_view msg) const {
-    auto tmp = msg;
-    constexpr int chunk_size = 8 * 1024;
-    bool first = true;
-
-    while (tmp.size() > chunk_size) {
-        opcode op = first ? opcode::text : opcode::continuation;
-        
-        auto meta = detail::format_meta(false, true, op, chunk_size, 0);
-        auto payload_span = std::span<const uint8_t>(reinterpret_cast<const uint8_t*>(tmp.data()), chunk_size);
-        auto l = m_socket.send(meta.span(), payload_span);
-        if (!l) {
-            return std::unexpected(l.error());
-        }
-        tmp = tmp.substr(chunk_size);
-        first = false;
-    }
-    
-    opcode op = first ? opcode::text : opcode::continuation;
-    auto meta = detail::format_meta(true, true, op, tmp.size(), 0);
-    auto payload_span = std::span<const uint8_t>(reinterpret_cast<const uint8_t*>(tmp.data()), tmp.size());
-    auto l = m_socket.send(meta.span(), payload_span);
-    if (!l) {
-        return std::unexpected(l.error());
-    }
-    return {};
+Client::send(std::span<const uint8_t> msg) {
+    return send_impl(msg, opcode::binary);
 }
 
-std::expected<void, std::string_view> Client::close() const{
+std::expected<void, std::string_view>
+Client::send(const std::string_view msg) {
+    auto buf = std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(msg.data()), msg.size());
+    return send_impl(buf, opcode::text);
+}
+
+std::expected<void, std::string_view> Client::close() const {
     auto meta = detail::format_meta(true, true, opcode::close, 0, 0);
-    auto sz=m_socket.send(meta.span());
-    if(!sz){
-	return std::unexpected(sz.error());
+    auto sz   = m_socket.send(meta.span());
+    if (!sz) {
+        return std::unexpected(sz.error());
     }
     return {};
 }
-
-
-
 
 } // namespace ws

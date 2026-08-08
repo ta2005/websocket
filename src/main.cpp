@@ -21,14 +21,19 @@ int main(int argc, char **argv) {
     }
     auto cl = ws::Client::create(s, "/", port);
     if(!cl){
+	std::print("{}\n",cl.error());
 	return 1;
     }
     auto res=cl->send("Hello world my name is Talel Zigni");
     if(!res){
+	std::print("{}\n",res.error());
 	return 1;
     }
     res=cl->close();
-
+    if(!res){
+	std::print("{}\n",res.error());
+	return 1;
+    }
 
     // send_message(*socket);
     // std::print("Server Response:\n{}\n", socket->read(1024));
