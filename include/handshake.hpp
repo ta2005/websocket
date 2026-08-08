@@ -23,6 +23,6 @@ std::expected<HandskaheResult, std::string_view>
 perform_handshake(const TcpSocket &, const std::string_view host,
                   const std::string_view path);
 
-} // namespace ws::client
+} // namespace ws
 
 #endif

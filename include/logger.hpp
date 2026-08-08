@@ -13,7 +13,7 @@ namespace ws::log {
 
 // Using C++23 std::print and std::println
 template <typename... Args>
-void debug(std::format_string<Args...> fmt, Args&&... args) {
+void debug(std::format_string<Args...> fmt, Args &&...args) {
     if constexpr (WS_DEBUG) {
         std::print("[DEBUG] ");
         std::println(fmt, std::forward<Args>(args)...);
@@ -21,13 +21,13 @@ void debug(std::format_string<Args...> fmt, Args&&... args) {
 }
 
 template <typename... Args>
-void info(std::format_string<Args...> fmt, Args&&... args) {
+void info(std::format_string<Args...> fmt, Args &&...args) {
     std::print("[INFO]  ");
     std::println(fmt, std::forward<Args>(args)...);
 }
 
 template <typename... Args>
-void error(std::format_string<Args...> fmt, Args&&... args) {
+void error(std::format_string<Args...> fmt, Args &&...args) {
     std::print(stderr, "[ERROR] ");
     std::println(stderr, fmt, std::forward<Args>(args)...);
 }

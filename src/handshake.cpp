@@ -41,12 +41,12 @@ bool is_field_value(const std::string_view v) {
     return std::all_of(v.begin(), v.end(), is_txt);
 }
 
-namespace ws{
+namespace ws {
 
 // Helper for case-insensitive string comparison
 bool iequals(std::string_view a, std::string_view b) {
     return std::ranges::equal(a, b, [](char c1, char c2) {
-        return std::tolower(static_cast<unsigned char>(c1)) == 
+        return std::tolower(static_cast<unsigned char>(c1)) ==
                std::tolower(static_cast<unsigned char>(c2));
     });
 }
@@ -108,7 +108,8 @@ parse_status_line(const std::string_view line) {
     // this should suffice for now but i will implement the comsume nbr fnct
     // later
     if (res.version != "HTTP/1.1") {
-        ws::log::error("Invalid HTTP version: Expected HTTP/1.1, got {}", res.version);
+        ws::log::error("Invalid HTTP version: Expected HTTP/1.1, got {}",
+                       res.version);
         return std::unexpected("invalid http version: expected HTTP/1.1");
     }
     size_t sp2 = line.find(' ', sp1 + 1);
@@ -136,8 +137,10 @@ parse_headers(const std::string_view headers) {
         return std::unexpected(status_line.error());
     }
     if (status_line->status != 101) {
-        ws::log::error("Handshake rejected. Server returned status code: {}", status_line->status);
-        return std::unexpected("Handshake rejected: Expected 101 Switching Protocols");
+        ws::log::error("Handshake rejected. Server returned status code: {}",
+                       status_line->status);
+        return std::unexpected(
+            "Handshake rejected: Expected 101 Switching Protocols");
     }
     HandskaheResult res;
     res.line = *status_line;
@@ -168,22 +171,23 @@ parse_headers(const std::string_view headers) {
         ws::log::debug("Parsed header: [{}] = [{}]", key, value);
 
         if (iequals(key, "Upgrade")) {
-            if (!res.upgrade.empty()) return std::unexpected("Duplicate Upgrade header");
+            if (!res.upgrade.empty())
+                return std::unexpected("Duplicate Upgrade header");
             res.upgrade = value;
-        } 
-        else if (iequals(key, "Connection")) {
-            if (!res.connection.empty()) return std::unexpected("Duplicate Connection header");
+        } else if (iequals(key, "Connection")) {
+            if (!res.connection.empty())
+                return std::unexpected("Duplicate Connection header");
             res.connection = value;
-        }
-        else if (iequals(key, "Sec-WebSocket-Accept")) {
-            if (!res.accept_key.empty()) return std::unexpected("Duplicate Sec-WebSocket-Accept header");
+        } else if (iequals(key, "Sec-WebSocket-Accept")) {
+            if (!res.accept_key.empty())
+                return std::unexpected("Duplicate Sec-WebSocket-Accept header");
             res.accept_key = value;
         }
-        // Extensions and protocol could technically be comma-separated, but we keep it simple for now
+        // Extensions and protocol could technically be comma-separated, but we
+        // keep it simple for now
         else if (iequals(key, "Sec-WebSocket-Extensions")) {
             res.extensions = value;
-        }
-        else if (iequals(key, "Sec-WebSocket-Protocol")) {
+        } else if (iequals(key, "Sec-WebSocket-Protocol")) {
             res.protocol = value;
         }
     }
@@ -207,4 +211,4 @@ perform_handshake(const TcpSocket &socket, const std::string_view host,
     return parse_headers(header_view);
 }
 
-} // namespace ws::client
+} // namespace ws

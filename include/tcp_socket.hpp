@@ -1,11 +1,11 @@
 #ifndef TCP_SOCKET_HPP
 #define TCP_SOCKET_HPP
 
-#include <expected>
-#include <string_view>
-#include <string>
-#include <span>
 #include <cstdint>
+#include <expected>
+#include <span>
+#include <string>
+#include <string_view>
 
 namespace ws {
 class TcpSocket {
@@ -21,14 +21,17 @@ class TcpSocket {
     TcpSocket &operator=(const TcpSocket &) = delete;
     ~TcpSocket();
     int get_fd() const { return m_fd; }
-    operator bool(){
-	return m_fd!=-1;
-    }
+        operator bool() { return m_fd != -1; }
     // i don't maybe i will change the interface later
-    std::expected<size_t,std::string_view> send(const std::span<const uint8_t>) const;
-    std::expected<size_t,std::string_view> send(const std::string_view) const;
-    std::expected<size_t,std::string_view> send(const std::span<const uint8_t> meta_data,const std::span<const uint8_t>payload) const;
-    std::expected<size_t,std::string_view> send(const std::span<const uint8_t> meta_data,std::string_view payload) const;
+    std::expected<size_t, std::string_view>
+    send(const std::span<const uint8_t>) const;
+    std::expected<size_t, std::string_view> send(const std::string_view) const;
+    std::expected<size_t, std::string_view>
+    send(const std::span<const uint8_t> meta_data,
+         const std::span<const uint8_t> payload) const;
+    std::expected<size_t, std::string_view>
+                send(const std::span<const uint8_t> meta_data,
+                     std::string_view               payload) const;
     std::string read(int max_len) const;
     std::expected<size_t, std::string_view> read(std::span<uint8_t> buf) const;
     // I think i can return std::string as the getaddrinfo strings

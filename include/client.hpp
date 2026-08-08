@@ -15,11 +15,11 @@ class Client {
     Client(TcpSocket s)
         : m_socket(std::move(s)), m_rng(std::random_device{}()) {};
     std::expected<void, std::string_view> send_impl(std::span<const uint8_t>,
-                                                    opcode) ;
+                                                    opcode);
 
   public:
-    std::expected<void, std::string_view> send(const std::string_view) ;
-    std::expected<void, std::string_view> send(std::span<const uint8_t>) ;
+    std::expected<void, std::string_view> send(const std::string_view);
+    std::expected<void, std::string_view> send(std::span<const uint8_t>);
     // next major update this will need to be and enum with an explanation
     std::expected<void, std::string_view> close() const;
     // this one should be uri
@@ -29,4 +29,4 @@ class Client {
 };
 } // namespace ws
 
-#endif 
+#endif
