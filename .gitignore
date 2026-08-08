@@ -1,3 +1,6 @@
+tags
+
+websock_client
 # Prerequisites
 *.d
 
@@ -66,6 +69,3 @@ vcpkg_installed/
 Testing/
 .cache/
 venv/
-tags
-
-websock_client

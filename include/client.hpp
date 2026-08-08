@@ -11,9 +11,11 @@ class Client {
     Client(TcpSocket s) : m_socket(std::move(s)) {};
 
   public:
-    // std::expected<void, std::string_view> send(const std::string_view msg);
-    std::expected<void, std::string_view> send(const std::span<uint8_t>) const;
-    // this one should be uri 
+    std::expected<void, std::string_view> send(const std::string_view) const;
+    std::expected<void, std::string_view> send(std::span<const uint8_t>) const;
+    // next major update this will need to be and enum with an explanation 
+    std::expected<void, std::string_view> close() const;
+    // this one should be uri
     static std::expected<Client, std::string_view>
     create(const std::string_view host, const std::string_view path,
            const std::string_view port = "80");
