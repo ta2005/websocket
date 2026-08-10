@@ -15,7 +15,7 @@ HEADERS := $(shell find $(HEADER_DIR) -type f \( -name "*.h" -o -name "*.hpp" \)
 OBJS    := $(SRCS:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o)
 DEPS    := $(OBJS:.o=.d)
 
-.PHONY: all clean run format
+.PHONY: all clean run format test
 
 all: $(TARGET)
 
@@ -42,3 +42,6 @@ run: all
 
 format:
 	@clang-format -i $(SRCS) $(HEADERS) --verbose
+
+test:
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c autobahn_runner.cpp -o wa
