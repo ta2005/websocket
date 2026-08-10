@@ -5,6 +5,8 @@ CompileFlags:
     - -Wshadow
     - -I
     - /home/talel/Programming/Projects/websock/include
+    - -I
+    - /home/talel/Programming/Projects/websock/vendor
     - "-fsanitize=address,undefined"
     - -std=c++23
   Compiler: g++

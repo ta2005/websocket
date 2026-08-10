@@ -1,6 +1,7 @@
 #ifndef OPCODE_HPP
 #define OPCODE_HPP
 
+#include <cassert>
 #include <cstdint>
 
 namespace ws {
@@ -31,6 +32,11 @@ constexpr opcode get_opcode(uint8_t code) {
         default:
             return opcode::unsupported;
     }
+}
+
+constexpr bool is_control(opcode op) {
+    assert(op != opcode::unsupported);
+    return static_cast<uint8_t>(op) & 0x8;
 }
 
 } // namespace ws

@@ -4,6 +4,8 @@
 #include "details/prepare_meta.hpp"
 #include "handshake.hpp"
 #include "logger.hpp"
+#include "simdutf.h"
+#include "simdutf.cpp"
 
 namespace ws {
 
@@ -71,6 +73,9 @@ Client::send(std::span<const uint8_t> msg) {
 }
 
 std::expected<void, std::string_view> Client::send(const std::string_view msg) {
+    if (!simdutf::validate_utf8(msg.data(), msg.size())) {
+        return std::unexpected("invalid uft8");
+    }
     auto buf = std::span<const uint8_t>(
         reinterpret_cast<const uint8_t *>(msg.data()), msg.size());
     return send_impl(buf, opcode::text);
@@ -85,41 +90,68 @@ std::expected<void, std::string_view> Client::close() const {
     return {};
 }
 
-std::expected<ChunckView, std::string_view> Client::read_chunk() {
-    // i need to add a function to parse the header
-    // detail::parse_meta();
-
-    auto         &buffer     = current_read.data;
-    constexpr int chunc_size = 8 * 1024;
-    buffer.erase(buffer.begin(), buffer.begin() + current_read.remaing_bytes);
-    size_t first_parse_size;
-    if (buffer.size() != 0) {
-        first_parse_size = buffer.size();
-    } else {
-        buffer.resize(chunc_size);
-        auto first_read = m_socket.read({buffer.data(), buffer.size()});
-        if (!first_read) {
-            return std::unexpected(first_read.error());
-        }
-        first_parse_size = *first_read;
+// this should be an internal function of send control
+// and then the dispatching happens with each one seding its own opcode
+// and payload
+std::expected<void, std::string_view>
+Client::send_ping(std::span<const uint8_t> payload) {
+    if (payload.size() > 125) {
+        return std::unexpected(
+            "control frames must have a size of 125 or less");
     }
-    // handle if the buffer is not empty the it is the start of a connection
+    auto meta =
+        detail::format_meta(true, true, opcode::ping, payload.size(), 0);
+    auto sz = m_socket.send(meta.span(), payload);
+    if (!sz) {
+        return std::unexpected(sz.error());
+    }
+    return {};
+    // detail::format_meta
+}
 
-    // maybe this one is uneeded
-    // some people might say of no there may be pending data
-    // i will fuck if you can't send a max for 14 bytes at one with
-    //  a prealloacted buffer
-    auto parsed_meta = detail::parse_meta({buffer.data(), first_parse_size});
+std::expected<void, std::string_view>
+Client::send_pong(std::span<const uint8_t> payload) {
+    if (payload.size() > 125) {
+        return std::unexpected(
+            "control frames must have a size of 125 or less");
+    }
+    auto meta =
+        detail::format_meta(true, false, opcode::pong, payload.size(), 0);
+    auto sz = m_socket.send(meta.span(), payload);
+    if (!sz) {
+        return std::unexpected(sz.error());
+    }
+    return {};
+    // detail::format_meta
+}
+
+std::expected<ChunckView, std::string_view>
+Client::read_chunck_impl(size_t first_read) {
+    constexpr int chunk_size  = 8 * 1024;
+    auto         &buffer      = current_read.data;
+    auto          parsed_meta = detail::parse_meta({buffer.data(), first_read});
     if (!parsed_meta) {
         return std::unexpected(parsed_meta.error());
     }
     if (parsed_meta->is_masked) {
         return std::unexpected("payload from the server should not be masked");
     }
+    if (is_control(parsed_meta->op) && !parsed_meta->fin) {
+        return std::unexpected("control frames must be be fin");
+    }
+    if (is_control(parsed_meta->op) && parsed_meta->len > 125) {
+        return std::unexpected(
+            "control frames must have a size of 125 or less");
+    }
+    //    if(is_control(parsed_meta->op) && parsed_meta->is_masked){
+    // return std::unexpected("Control frames can't be masked");
+    //    }
+    current_read.fin  = parsed_meta->fin;
+    current_read.type = parsed_meta->op;
     buffer.erase(buffer.begin(), buffer.begin() + parsed_meta->meta_size);
-    size_t total_read = first_parse_size - parsed_meta->meta_size;
+    size_t total_read = first_read - parsed_meta->meta_size;
     while (total_read < parsed_meta->len) {
-        std::array<uint8_t, chunc_size> tmp;
+        std::array<uint8_t, chunk_size> tmp;
         auto read_size = m_socket.read({tmp.data(), tmp.size()});
         if (!read_size) {
             return std::unexpected(read_size.error());
@@ -128,12 +160,44 @@ std::expected<ChunckView, std::string_view> Client::read_chunk() {
         total_read += *read_size;
     }
     current_read.remaing_bytes = total_read;
-    current_read.fin           = parsed_meta->fin;
-    current_read.type          = parsed_meta->op;
+    switch (parsed_meta->op) {
+        case opcode::ping: {
+            auto pong_res = send_pong({buffer.data(), parsed_meta->len});
+            if (!pong_res) {
+                return std::unexpected("unable to respond to ping");
+            }
+            return read_chunk();
+        } break;
+        case opcode::text:
+            if (!simdutf::validate_utf8(reinterpret_cast<char *>(buffer.data()), parsed_meta->len)) {
+                return std::unexpected("invalid uft8");
+            }
+            // TODO: add utf8 valid
+            break;
+        default:;
+    }
     ChunckView res = {.payload = std::span{buffer.data(), parsed_meta->len},
                       .is_fin  = parsed_meta->fin,
                       .type    = parsed_meta->op};
     return res;
+}
+
+std::expected<ChunckView, std::string_view> Client::read_chunk() {
+    // i need to add a function to parse the header
+    // detail::parse_meta();
+    constexpr int chunk_size = 8 * 1024;
+    auto         &buffer     = current_read.data;
+    buffer.erase(buffer.begin(), buffer.begin() + current_read.remaing_bytes);
+    if (buffer.size() != 0) {
+        return read_chunck_impl(buffer.size());
+    } else {
+        buffer.resize(chunk_size);
+        auto first_read = m_socket.read({buffer.data(), buffer.size()});
+        if (!first_read) {
+            return std::unexpected(first_read.error());
+        }
+        return read_chunck_impl(*first_read);
+    }
 }
 
 } // namespace ws
