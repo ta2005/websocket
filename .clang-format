@@ -21,5 +21,5 @@ AlignConsecutiveDeclarations: true
 
 # Optional: Aligns trailing comments perfectly
 AlignTrailingComments: true
-
+RemoveEmptyLinesInUnwrappedLines: true
 ...

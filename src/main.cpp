@@ -1,46 +1,60 @@
 #include <print>
+#include <string.h>
+#include <string_view>
 #include <unistd.h>
 
 #include "client.hpp"
-
-void usage() { std::print("USAGE"); }
-
-// i need to disable implicit conversion like wtf
-// this one should be used with std::expected
-// i will read more about them in the core guidline and learncpp
+#include "logger.hpp"
+#include "opcode.hpp"
 
 int main(int argc, char **argv) {
     std::string_view s    = "localhost";
     std::string_view port = "8765";
+
     if (argc > 2) {
         s = argv[1];
-        if (argc == 3) {
+        if (argc == 3)
             port = argv[2];
-        }
     }
-    auto cl = ws::Client::create(s, "/", port);
-    if (!cl) {
-        std::print("{}\n", cl.error());
+
+    auto client_res = ws::Client::create(s, "/", port);
+    if (!client_res) {
+        std::print("Failed to connect/handshake: {}\n", client_res.error());
         return 1;
     }
-    auto res = cl->send("Hello world my name is Talel Zigni");
-    if (!res) {
-        std::print("{}\n", res.error());
-        return 1;
-    }
-    res = cl->close();
-    if (!res) {
-        std::print("{}\n", res.error());
+    ws::Client client = std::move(*client_res);
+
+    ws::log::info("Sending message...");
+    auto send_res = client.send("Hello world my name is Talel Zigni");
+    if (!send_res) {
+        std::print("Send failed: {}\n", send_res.error());
         return 1;
     }
 
-    // send_message(*socket);
-    // std::print("Server Response:\n{}\n", socket->read(1024));
-    //
-    // // of coure the seq from the srv is valid
-    // //
-    sleep(2);
+    ws::log::info("Waiting for server response...");
+    auto chunk_res = client.read_chunk();
+    if (!chunk_res) {
+        std::print("Read failed: {}\n", chunk_res.error());
+        return 1;
+    }
 
+    ws::ChunckView view = *chunk_res;
+
+    std::print("\n=== RECEIVED FRAME ===\n");
+    std::print("Opcode: {}\n", static_cast<int>(view.type));
+    std::print("FIN bit: {}\n", view.is_fin);
+    std::print("Payload Length: {} bytes\n", view.payload.size());
+
+    // Print the payload as a string
+    std::string_view payload_str(
+        reinterpret_cast<const char *>(view.payload.data()),
+        view.payload.size());
+    std::print("Payload Data: {}\n", payload_str);
+    std::print("======================\n\n");
+
+    if (!client.close()) {
+        return 1;
+    }
     return 0;
 }
 /*curl --include \

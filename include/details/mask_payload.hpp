@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <span>
 
-void mask_payload(std::span<uint8_t> payload, uint32_t mask) {
+constexpr void mask_payload(std::span<uint8_t> payload, uint32_t mask) {
     // I have seen this pattern before
     // with stb printf when wirting data
     mask = htonl(mask);

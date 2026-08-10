@@ -17,8 +17,8 @@ struct FrameHeader {
     std::span<const uint8_t> span() const { return {data.data(), size}; }
 };
 
-FrameHeader format_meta(bool fin, bool is_masked, opcode op, uint64_t len,
-                        uint32_t mask) {
+constexpr FrameHeader format_meta(bool fin, bool is_masked, opcode op,
+                                  uint64_t len, uint32_t mask) {
     FrameHeader meta{};
 
     // FIN is the 8th bit (0x80). Opcode is the bottom 4 bits (0x0F).

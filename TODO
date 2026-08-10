@@ -19,3 +19,7 @@ utf 8 validation
 sha1
 base64
 the read api
+
+the read function 
+i will implement one like boost:beast 
+with read that return a cosnt span to an internal buffer

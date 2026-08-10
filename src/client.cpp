@@ -1,10 +1,9 @@
 #include "client.hpp"
 #include "details/mask_payload.hpp"
+#include "details/parse_meta.hpp"
 #include "details/prepare_meta.hpp"
 #include "handshake.hpp"
 #include "logger.hpp"
-#include "tcp_socket.hpp"
-#include <expected>
 
 namespace ws {
 
@@ -84,6 +83,57 @@ std::expected<void, std::string_view> Client::close() const {
         return std::unexpected(sz.error());
     }
     return {};
+}
+
+std::expected<ChunckView, std::string_view> Client::read_chunk() {
+    // i need to add a function to parse the header
+    // detail::parse_meta();
+
+    auto         &buffer     = current_read.data;
+    constexpr int chunc_size = 8 * 1024;
+    buffer.erase(buffer.begin(), buffer.begin() + current_read.remaing_bytes);
+    size_t first_parse_size;
+    if (buffer.size() != 0) {
+        first_parse_size = buffer.size();
+    } else {
+        buffer.resize(chunc_size);
+        auto first_read = m_socket.read({buffer.data(), buffer.size()});
+        if (!first_read) {
+            return std::unexpected(first_read.error());
+        }
+        first_parse_size = *first_read;
+    }
+    // handle if the buffer is not empty the it is the start of a connection
+
+    // maybe this one is uneeded
+    // some people might say of no there may be pending data
+    // i will fuck if you can't send a max for 14 bytes at one with
+    //  a prealloacted buffer
+    auto parsed_meta = detail::parse_meta({buffer.data(), first_parse_size});
+    if (!parsed_meta) {
+        return std::unexpected(parsed_meta.error());
+    }
+    if (parsed_meta->is_masked) {
+        return std::unexpected("payload from the server should not be masked");
+    }
+    buffer.erase(buffer.begin(), buffer.begin() + parsed_meta->meta_size);
+    size_t total_read = first_parse_size - parsed_meta->meta_size;
+    while (total_read < parsed_meta->len) {
+        std::array<uint8_t, chunc_size> tmp;
+        auto read_size = m_socket.read({tmp.data(), tmp.size()});
+        if (!read_size) {
+            return std::unexpected(read_size.error());
+        }
+        buffer.insert(buffer.end(), tmp.begin(), tmp.begin() + *read_size);
+        total_read += *read_size;
+    }
+    current_read.remaing_bytes = total_read;
+    current_read.fin           = parsed_meta->fin;
+    current_read.type          = parsed_meta->op;
+    ChunckView res = {.payload = std::span{buffer.data(), parsed_meta->len},
+                      .is_fin  = parsed_meta->fin,
+                      .type    = parsed_meta->op};
+    return res;
 }
 
 } // namespace ws
