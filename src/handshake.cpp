@@ -1,3 +1,5 @@
+// #define WS_DEBUG 0
+
 #include "handshake.hpp"
 #include "logger.hpp"
 #include <algorithm>
@@ -53,7 +55,7 @@ bool iequals(std::string_view a, std::string_view b) {
 
 std::expected<void, std::string_view>
 send_handshake(const TcpSocket &socket, const std::string_view host,
-               const std::string_view path) {
+               const std::string_view path, const std::string_view port) {
     // this is just place holder that jsut works of course i can then use the
     // same stratgey as curl and get these fields from the command line
 
@@ -61,11 +63,11 @@ send_handshake(const TcpSocket &socket, const std::string_view host,
         std::format("GET {} HTTP/1.1\r\n"
                     "Connection: Upgrade\r\n"
                     "Upgrade: websocket\r\n"
-                    "Host: {}\r\n"
+                    "Host: {}:{}\r\n"
                     "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n"
                     "Sec-WebSocket-Version: 13\r\n"
                     "\r\n",
-                    path, host));
+                    path, host, port));
     if (!out) {
         return std::unexpected(out.error());
     }
@@ -81,7 +83,7 @@ get_line(std::string_view &buf) {
     auto pos = buf.find('\n');
     if (pos == std::string_view::npos) {
         // put all the rest into line;
-        return std::unexpected("found no \n");
+        return std::unexpected("found no \\n");
     }
     std::string_view line = buf.substr(0, pos);
     buf                   = buf.substr(pos + 1);
@@ -128,42 +130,37 @@ parse_status_line(const std::string_view line) {
     return res;
 }
 
-std::expected<HandskaheResult, std::string_view>
+std::expected<std::pair<HandskaheResult, size_t>, std::string_view>
 parse_headers(const std::string_view headers) {
     auto tmphd       = headers;
     auto status_line = get_line(tmphd).and_then(parse_status_line);
+    // parse_status_line;
     if (!status_line) {
         ws::log::error("Failed to parse status line: {}", status_line.error());
         return std::unexpected(status_line.error());
     }
-    if (status_line->status != 101) {
-        ws::log::error("Handshake rejected. Server returned status code: {}",
-                       status_line->status);
-        return std::unexpected(
-            "Handshake rejected: Expected 101 Switching Protocols");
-    }
     HandskaheResult res;
     res.line = *status_line;
     while (!tmphd.empty()) {
-        auto l = get_line(tmphd);
-        if (!l) {
-            return std::unexpected(l.error());
+        auto current_line = get_line(tmphd);
+        if (!current_line) {
+            return std::unexpected(current_line.error());
         }
-        if (l->empty()) {
+        if (current_line->empty()) {
             break;
         }
         // i should have just create a wrapper around
-        // l->find
+        // current_line->find
         // and then used and_then
-        auto colon_pos = l->find(':');
+        auto colon_pos = current_line->find(':');
         if (colon_pos == std::string_view::npos) {
             return std::unexpected("invalid line header no colon was found");
         }
-        auto key = l->substr(0, colon_pos);
+        auto key = current_line->substr(0, colon_pos);
         if (!is_field_name(key)) {
             return std::unexpected("invalid header:not a field name");
         }
-        auto value = l->substr(colon_pos + 1);
+        auto value = current_line->substr(colon_pos + 1);
         value      = drop_space_and_tab(value);
         if (!is_field_value(value)) {
             return std::unexpected("invalid header:not a value name");
@@ -191,24 +188,36 @@ parse_headers(const std::string_view headers) {
             res.protocol = value;
         }
     }
-    ws::log::info("Handshake successfully parsed");
-    return res;
+    ws::log::debug("Handshake successfully parsed");
+    size_t header_len = headers.size() - tmphd.size();
+    return std::pair{res, header_len};
 }
 std::expected<HandskaheResult, std::string_view>
 perform_handshake(const TcpSocket &socket, const std::string_view host,
-                  const std::string_view path) {
-    auto res = send_handshake(socket, host, path);
+                  const std::string_view path, const std::string_view port) {
+    auto res = send_handshake(socket, host, path, port);
     if (!res) {
         return std::unexpected(res.error());
     }
     std::array<uint8_t, 1024 * 8> buffer;
     auto                          actual_size = socket.read(buffer);
     if (!actual_size) {
-        return std::unexpected(res.error());
+        return std::unexpected(actual_size.error());
     }
     std::string_view header_view{reinterpret_cast<const char *>(buffer.data()),
                                  *actual_size};
-    return parse_headers(header_view);
+    auto             parsed_header = parse_headers(header_view);
+    if (!parsed_header) {
+        return std::unexpected(parsed_header.error());
+    }
+    if (parsed_header->second != *actual_size) {
+        size_t msg_len = *actual_size - parsed_header->second;
+        parsed_header->first.leftover.reserve(msg_len);
+        parsed_header->first.leftover.assign(buffer.begin() +
+                                                 parsed_header->second,
+                                             buffer.begin() + *actual_size);
+    }
+    return parsed_header->first;
 }
 
 } // namespace ws

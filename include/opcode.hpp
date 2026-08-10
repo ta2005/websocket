@@ -34,10 +34,11 @@ constexpr opcode get_opcode(uint8_t code) {
     }
 }
 
-constexpr bool is_control(opcode op) {
-    assert(op != opcode::unsupported);
-    return static_cast<uint8_t>(op) & 0x8;
+constexpr bool is_supported(opcode op) {
+    return get_opcode(static_cast<uint8_t>(op)) == opcode::unsupported;
 }
+
+constexpr bool is_control(opcode op) { return static_cast<uint8_t>(op) & 0x8; }
 
 } // namespace ws
 

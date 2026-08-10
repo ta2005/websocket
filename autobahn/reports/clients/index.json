@@ -1,0 +1,11 @@
+{
+   "MyCppClient": {
+      "1.1.1": {
+         "behavior": "OK",
+         "behaviorClose": "UNCLEAN",
+         "duration": 7,
+         "remoteCloseCode": 2271,
+         "reportfile": "mycppclient_case_1_1_1.json"
+      }
+   }
+}

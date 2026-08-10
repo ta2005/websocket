@@ -47,7 +47,10 @@ parse_meta(std::span<uint8_t> payload) {
     if (((*meta)[0] & 0x70) != 0) {
         return std::unexpected("unspported extenstion");
     }
-    auto op       = get_opcode(((*meta)[0]) & 0x0F);
+    auto op = get_opcode(((*meta)[0]) & 0x0F);
+    if (op == opcode::unsupported) {
+        return std::unexpected("unsupported opcode");
+    }
     res.op        = op;
     res.is_masked = ((*meta)[1]) & 0x80;
     res.len       = ((*meta)[1]) & 0x7F;

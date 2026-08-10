@@ -5,7 +5,6 @@
 #include "handshake.hpp"
 #include "logger.hpp"
 #include "simdutf.h"
-#include "simdutf.cpp"
 
 namespace ws {
 
@@ -16,13 +15,32 @@ Client::create(const std::string_view host, const std::string_view path,
     if (!s) {
         return std::unexpected(s.error());
     }
-    auto hk = perform_handshake(*s, host, path);
+    auto hk = perform_handshake(*s, host, path, port);
     if (!hk) {
         ws::log::error("Handshake failed: {}", hk.error());
         return std::unexpected(hk.error());
     }
     ws::log::info("Client created and handshake complete");
-    return Client(std::move(*s));
+    Client c = (std::move(*s));
+    if (!hk->leftover.empty()) {
+        c.current_read.data = std::move(hk->leftover);
+        // c.current_read.remaing_bytes = c.current_read.data.size();
+    }
+    return c;
+}
+
+std::expected<void, std::string_view>
+Client::send_control_frame(std::span<const uint8_t> payload, opcode op) {
+    if (payload.size() > 125) {
+        return std::unexpected(
+            "control frames must have a size of 125 or less");
+    }
+    auto meta = detail::format_meta(true, true, op, payload.size(), m_rng());
+    auto sz   = m_socket.send(meta.span(), payload);
+    if (!sz) {
+        return std::unexpected(sz.error());
+    }
+    return {};
 }
 
 std::expected<void, std::string_view>
@@ -81,13 +99,9 @@ std::expected<void, std::string_view> Client::send(const std::string_view msg) {
     return send_impl(buf, opcode::text);
 }
 
-std::expected<void, std::string_view> Client::close() const {
-    auto meta = detail::format_meta(true, true, opcode::close, 0, 0);
-    auto sz   = m_socket.send(meta.span());
-    if (!sz) {
-        return std::unexpected(sz.error());
-    }
-    return {};
+std::expected<void, std::string_view>
+Client::close(std::span<const uint8_t> payload) {
+    return send_control_frame(payload, opcode::close);
 }
 
 // this should be an internal function of send control
@@ -95,34 +109,12 @@ std::expected<void, std::string_view> Client::close() const {
 // and payload
 std::expected<void, std::string_view>
 Client::send_ping(std::span<const uint8_t> payload) {
-    if (payload.size() > 125) {
-        return std::unexpected(
-            "control frames must have a size of 125 or less");
-    }
-    auto meta =
-        detail::format_meta(true, true, opcode::ping, payload.size(), 0);
-    auto sz = m_socket.send(meta.span(), payload);
-    if (!sz) {
-        return std::unexpected(sz.error());
-    }
-    return {};
-    // detail::format_meta
+    return send_control_frame(payload, opcode::ping);
 }
 
 std::expected<void, std::string_view>
 Client::send_pong(std::span<const uint8_t> payload) {
-    if (payload.size() > 125) {
-        return std::unexpected(
-            "control frames must have a size of 125 or less");
-    }
-    auto meta =
-        detail::format_meta(true, false, opcode::pong, payload.size(), 0);
-    auto sz = m_socket.send(meta.span(), payload);
-    if (!sz) {
-        return std::unexpected(sz.error());
-    }
-    return {};
-    // detail::format_meta
+    return send_control_frame(payload, opcode::pong);
 }
 
 std::expected<ChunckView, std::string_view>
@@ -131,8 +123,19 @@ Client::read_chunck_impl(size_t first_read) {
     auto         &buffer      = current_read.data;
     auto          parsed_meta = detail::parse_meta({buffer.data(), first_read});
     if (!parsed_meta) {
+        ws::log::error("[READ ERROR] Failed to parse frame metadata: {}",
+                       parsed_meta.error());
         return std::unexpected(parsed_meta.error());
     }
+    // 1. Log Parsed Metadata
+    ws::log::debug("=== [FRAME HEADER RECEIVED] ===");
+    ws::log::debug("  Opcode:    0x{:01X} ({})",
+                   static_cast<uint8_t>(parsed_meta->op),
+                   static_cast<int>(parsed_meta->op));
+    ws::log::debug("  FIN Bit:   {}", parsed_meta->fin);
+    ws::log::debug("  Masked:    {}", parsed_meta->is_masked);
+    ws::log::debug("  Payload L: {} bytes", parsed_meta->len);
+    ws::log::debug("  Header Size: {} bytes", parsed_meta->meta_size);
     if (parsed_meta->is_masked) {
         return std::unexpected("payload from the server should not be masked");
     }
@@ -143,9 +146,6 @@ Client::read_chunck_impl(size_t first_read) {
         return std::unexpected(
             "control frames must have a size of 125 or less");
     }
-    //    if(is_control(parsed_meta->op) && parsed_meta->is_masked){
-    // return std::unexpected("Control frames can't be masked");
-    //    }
     current_read.fin  = parsed_meta->fin;
     current_read.type = parsed_meta->op;
     buffer.erase(buffer.begin(), buffer.begin() + parsed_meta->meta_size);
@@ -160,6 +160,17 @@ Client::read_chunck_impl(size_t first_read) {
         total_read += *read_size;
     }
     current_read.remaing_bytes = total_read;
+    // 2. Log Received Data Payload
+    std::string_view payload_view(reinterpret_cast<const char *>(buffer.data()),
+                                  parsed_meta->len);
+
+    ws::log::debug("=== [FRAME PAYLOAD READ] ===");
+    if (parsed_meta->op == opcode::text) {
+        ws::log::debug("  Text Payload ({}) bytes: \"{}\"", parsed_meta->len,
+                       payload_view);
+    } else {
+        ws::log::debug("  Binary/Control Payload ({}) bytes", parsed_meta->len);
+    }
     switch (parsed_meta->op) {
         case opcode::ping: {
             auto pong_res = send_pong({buffer.data(), parsed_meta->len});
@@ -169,11 +180,19 @@ Client::read_chunck_impl(size_t first_read) {
             return read_chunk();
         } break;
         case opcode::text:
-            if (!simdutf::validate_utf8(reinterpret_cast<char *>(buffer.data()), parsed_meta->len)) {
+            if (!simdutf::validate_utf8(reinterpret_cast<char *>(buffer.data()),
+                                        parsed_meta->len)) {
+                ws::log::error("[READ ERROR] UTF-8 validation failed on text "
+                               "frame payload");
                 return std::unexpected("invalid uft8");
             }
-            // TODO: add utf8 valid
             break;
+        case opcode::close: {
+            if (auto close_res = close({buffer.data(), parsed_meta->len});
+                !close_res) {
+                return std::unexpected("unable to echo close frame");
+            }
+        } break;
         default:;
     }
     ChunckView res = {.payload = std::span{buffer.data(), parsed_meta->len},
@@ -187,17 +206,21 @@ std::expected<ChunckView, std::string_view> Client::read_chunk() {
     // detail::parse_meta();
     constexpr int chunk_size = 8 * 1024;
     auto         &buffer     = current_read.data;
-    buffer.erase(buffer.begin(), buffer.begin() + current_read.remaing_bytes);
-    if (buffer.size() != 0) {
-        return read_chunck_impl(buffer.size());
-    } else {
-        buffer.resize(chunk_size);
-        auto first_read = m_socket.read({buffer.data(), buffer.size()});
-        if (!first_read) {
-            return std::unexpected(first_read.error());
-        }
-        return read_chunck_impl(*first_read);
+    if (current_read.remaing_bytes > 0 &&
+        current_read.remaing_bytes <= buffer.size()) {
+        buffer.erase(buffer.begin(),
+                     buffer.begin() + current_read.remaing_bytes);
+        current_read.remaing_bytes = 0;
     }
+    if (!buffer.empty()) {
+        return read_chunck_impl(buffer.size());
+    }
+    buffer.resize(chunk_size);
+    auto first_read = m_socket.read({buffer.data(), buffer.size()});
+    if (!first_read) {
+        return std::unexpected(first_read.error());
+    }
+    return read_chunck_impl(*first_read);
 }
 
 } // namespace ws
