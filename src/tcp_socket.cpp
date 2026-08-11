@@ -16,15 +16,16 @@ TcpSocket::~TcpSocket() {
         close(m_fd);
     }
 }
-std::expected<TcpSocket, std::string_view>
+std::expected<TcpSocket, Error>
 TcpSocket::connect(const std::string_view host, const std::string_view port) {
     addrinfo *res = NULL;
     addrinfo  hints{};
     hints.ai_family   = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
-    int result;
-    if ((result = getaddrinfo(host.data(), port.data(), &hints, &res)) != 0) {
-        return std::unexpected(gai_strerror(result));
+    if (int result = getaddrinfo(host.data(), port.data(), &hints, &res);
+        result != 0) {
+        ws::log::error("getaddrinfo failed: {}", gai_strerror(result));
+        return std::unexpected(Error::ConnectionClosed);
     }
     int socketfd = -1;
     for (addrinfo *p = res; p != NULL; p = (p)->ai_next) {
@@ -76,7 +77,7 @@ TcpSocket &TcpSocket::operator=(TcpSocket &&other) {
 }
 // both of these functions are shit
 // but they do the job
-std::expected<size_t, std::string_view>
+std::expected<size_t, Error>
 TcpSocket::send(std::span<const uint8_t> data) const {
     size_t total_sent = 0;
     while (total_sent < data.size()) {
@@ -86,15 +87,14 @@ TcpSocket::send(std::span<const uint8_t> data) const {
             if (errno == EINTR)
                 continue; // Interrupted by signal, try again
             ws::log::error("TcpSocket::send error: {}", std::strerror(errno));
-            return std::unexpected("TcpSocket::send failed");
+            return std::unexpected(Error::ConnectionFailed);
         }
         total_sent += sent;
     }
     return total_sent;
 }
 
-std::expected<size_t, std::string_view>
-TcpSocket::send(const std::string_view buf) const {
+std::expected<size_t, Error> TcpSocket::send(const std::string_view buf) const {
     auto bytes = std::span<const uint8_t>(
         reinterpret_cast<const uint8_t *>(buf.data()), buf.size());
     return send(bytes);
@@ -107,18 +107,17 @@ std::string TcpSocket::read(int max_len) const {
     return s;
 }
 
-std::expected<size_t, std::string_view>
-TcpSocket::read(std::span<uint8_t> buf) const {
+std::expected<size_t, Error> TcpSocket::read(std::span<uint8_t> buf) const {
     while (true) {
         ssize_t bytes_read = ::read(m_fd, buf.data(), buf.size());
         if (bytes_read < 0) {
             if (errno == EINTR)
                 continue; // Interrupted by signal, try again
             ws::log::error("TcpSocket::read error: {}", std::strerror(errno));
-            return std::unexpected("TcpSocket::read failed");
+            return std::unexpected(Error::ReadFailed);
         }
         if (bytes_read == 0) {
-            return std::unexpected("Connection closed by peer");
+            return std::unexpected(Error::ConnectionClosed);
         }
         return static_cast<size_t>(bytes_read);
     }
@@ -128,7 +127,7 @@ TcpSocket::read(std::span<uint8_t> buf) const {
 // Answer: You don't need `const` on the span itself (i.e. `const std::span`),
 // because a span is just a lightweight view (pointer + size).
 // Passing `std::span<const uint8_t>` by value is the standard C++ way!
-std::expected<size_t, std::string_view>
+std::expected<size_t, Error>
 TcpSocket::send(std::span<const uint8_t> meta_data,
                 std::span<const uint8_t> payload) const {
     size_t       total_sent = 0;
@@ -155,7 +154,7 @@ TcpSocket::send(std::span<const uint8_t> meta_data,
                 continue;
             ws::log::error("TcpSocket::send (writev) error: {}",
                            std::strerror(errno));
-            return std::unexpected("TcpSocket::send (writev) failed");
+            return std::unexpected(Error::WriteFailed);
         }
         total_sent += sent;
 
@@ -184,7 +183,7 @@ TcpSocket::send(std::span<const uint8_t> meta_data,
     return total_sent;
 }
 
-std::expected<size_t, std::string_view>
+std::expected<size_t, Error>
 TcpSocket::send(const std::span<const uint8_t> meta_data,
                 std::string_view               payload) const {
     auto buf = std::span<const uint8_t>(

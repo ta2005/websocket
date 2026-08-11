@@ -1,14 +1,14 @@
 {
    "agent": "MyCppClient",
    "behavior": "FAILED",
-   "behaviorClose": "FAILED",
+   "behaviorClose": "OK",
    "case": 25,
-   "closedByMe": false,
+   "closedByMe": true,
    "createStats": true,
    "createWirelog": true,
    "description": "Send unsolicited pong with payload. Send ping with payload. Verify pong for ping is received.",
-   "droppedByMe": false,
-   "duration": 4,
+   "droppedByMe": true,
+   "duration": 1009,
    "expectation": "Nothing in reply to own Pong, but Pong with payload echo'ed in reply to Ping. Clean close with normal code.",
    "expected": {
       "OK": [
@@ -38,25 +38,30 @@
    "reportCompressionRatio": false,
    "reportTime": false,
    "result": "Actual events differ from any expected.",
-   "resultClose": "The connection was failed by the wrong endpoint",
-   "rxFrameStats": {},
+   "resultClose": "Connection was properly closed",
+   "rxFrameStats": {
+      "8": 1
+   },
    "rxOctetStats": {
+      "6": 1,
       "186": 1
    },
-   "started": "2026-08-10T22:26:45.619Z",
+   "started": "2026-08-10T23:52:08.811Z",
    "trafficStats": null,
    "txFrameStats": {
+      "8": 1,
       "9": 1,
       "10": 1
    },
    "txOctetStats": {
+      "2": 1,
       "14": 1,
       "26": 1,
       "208": 1
    },
-   "wasClean": false,
+   "wasClean": true,
    "wasCloseHandshakeTimeout": false,
-   "wasNotCleanReason": "peer dropped the TCP connection without previous WebSocket closing handshake",
+   "wasNotCleanReason": null,
    "wasOpenHandshakeTimeout": false,
    "wasServerConnectionDropTimeout": false,
    "wirelog": [
@@ -122,6 +127,50 @@
       [
          "TI",
          1
+      ],
+      [
+         "TIE"
+      ],
+      [
+         "TF",
+         [
+            0,
+            ""
+         ],
+         8,
+         true,
+         0,
+         null,
+         null,
+         null,
+         false
+      ],
+      [
+         "TO",
+         [
+            2,
+            "8800"
+         ],
+         false
+      ],
+      [
+         "RO",
+         [
+            6,
+            "8880de15c3f2"
+         ]
+      ],
+      [
+         "RF",
+         [
+            0,
+            ""
+         ],
+         8,
+         true,
+         0,
+         true,
+         "de15c3f2"
       ]
    ]
 }

@@ -1,14 +1,14 @@
 {
    "agent": "MyCppClient",
    "behavior": "OK",
-   "behaviorClose": "UNCLEAN",
+   "behaviorClose": "OK",
    "case": 216,
    "closedByMe": true,
    "createStats": true,
    "createWirelog": true,
    "description": "Send a close frame with payload length 0 (no close code, no close reason)",
-   "droppedByMe": false,
-   "duration": 2,
+   "droppedByMe": true,
+   "duration": 3,
    "expectation": "Clean close with normal code.",
    "expected": {
       "OK": []
@@ -33,12 +33,15 @@
    "reportCompressionRatio": false,
    "reportTime": false,
    "result": "Actual events match at least one expected.",
-   "resultClose": "The spec requires the connection to be failed cleanly here",
-   "rxFrameStats": {},
+   "resultClose": "Connection was properly closed",
+   "rxFrameStats": {
+      "8": 1
+   },
    "rxOctetStats": {
+      "6": 1,
       "187": 1
    },
-   "started": "2026-08-10T22:26:50.673Z",
+   "started": "2026-08-10T23:52:48.684Z",
    "trafficStats": null,
    "txFrameStats": {
       "8": 1
@@ -47,9 +50,9 @@
       "2": 1,
       "208": 1
    },
-   "wasClean": false,
+   "wasClean": true,
    "wasCloseHandshakeTimeout": false,
-   "wasNotCleanReason": "peer dropped the TCP connection without previous WebSocket closing handshake",
+   "wasNotCleanReason": null,
    "wasOpenHandshakeTimeout": false,
    "wasServerConnectionDropTimeout": false,
    "wirelog": [
@@ -93,6 +96,25 @@
       [
          "KL",
          1
+      ],
+      [
+         "RO",
+         [
+            6,
+            "8880f6082cc1"
+         ]
+      ],
+      [
+         "RF",
+         [
+            0,
+            ""
+         ],
+         8,
+         true,
+         0,
+         true,
+         "f6082cc1"
       ]
    ]
 }

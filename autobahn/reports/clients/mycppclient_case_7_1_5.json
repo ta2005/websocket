@@ -1,14 +1,14 @@
 {
    "agent": "MyCppClient",
-   "behavior": "OK",
+   "behavior": "FAILED",
    "behaviorClose": "UNCLEAN",
    "case": 214,
    "closedByMe": true,
    "createStats": true,
    "createWirelog": true,
    "description": "Send message fragment1 followed by close then fragment",
-   "droppedByMe": false,
-   "duration": 2,
+   "droppedByMe": true,
+   "duration": 1004,
    "expectation": "Clean close with normal code.",
    "expected": {
       "OK": []
@@ -27,18 +27,27 @@
    "isServer": true,
    "localCloseCode": 1000,
    "localCloseReason": null,
-   "received": [],
+   "received": [
+      [
+         "message",
+         "fragment1",
+         false
+      ]
+   ],
    "remoteCloseCode": null,
    "remoteCloseReason": null,
    "reportCompressionRatio": false,
    "reportTime": false,
-   "result": "Actual events match at least one expected.",
+   "result": "Actual events differ from any expected.",
    "resultClose": "The spec requires the connection to be failed cleanly here",
-   "rxFrameStats": {},
+   "rxFrameStats": {
+      "1": 1
+   },
    "rxOctetStats": {
+      "15": 1,
       "187": 1
    },
-   "started": "2026-08-10T22:26:50.661Z",
+   "started": "2026-08-10T23:52:46.653Z",
    "trafficStats": null,
    "txFrameStats": {
       "0": 1,
@@ -51,8 +60,8 @@
       "208": 1
    },
    "wasClean": false,
-   "wasCloseHandshakeTimeout": false,
-   "wasNotCleanReason": "peer dropped the TCP connection without previous WebSocket closing handshake",
+   "wasCloseHandshakeTimeout": true,
+   "wasNotCleanReason": "peer did not respond (in time) in closing handshake",
    "wasOpenHandshakeTimeout": false,
    "wasServerConnectionDropTimeout": false,
    "wirelog": [
@@ -140,6 +149,25 @@
       [
          "KL",
          1
+      ],
+      [
+         "RO",
+         [
+            15,
+            "81892fb74a9e49c52bf942d224ea1e"
+         ]
+      ],
+      [
+         "RF",
+         [
+            9,
+            "fragment1"
+         ],
+         1,
+         true,
+         0,
+         true,
+         "2fb74a9e"
       ]
    ]
 }

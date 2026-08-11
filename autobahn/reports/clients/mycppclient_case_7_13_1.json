@@ -7,8 +7,8 @@
    "createStats": true,
    "createWirelog": true,
    "description": "Send close with close code 5000",
-   "droppedByMe": false,
-   "duration": 2,
+   "droppedByMe": true,
+   "duration": 3,
    "expectation": "Actual events are undefined by the spec.",
    "expected": {
       "OK": []
@@ -22,7 +22,7 @@
       "closedByMe": true,
       "requireClean": false
    },
-   "failedByMe": false,
+   "failedByMe": true,
    "httpRequest": "GET /runCase?case=245&agent=MyCppClient HTTP/1.1\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nHost: 127.0.0.1:9001\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n",
    "httpResponse": "HTTP/1.1 101 Switching Protocols\r\nServer: AutobahnTestSuite/25.10.1-0.10.9\r\nX-Powered-By: AutobahnPython/0.10.9\r\nUpgrade: WebSocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n",
    "id": "7.13.1",
@@ -30,17 +30,20 @@
    "localCloseCode": 5000,
    "localCloseReason": null,
    "received": [],
-   "remoteCloseCode": null,
+   "remoteCloseCode": 41073,
    "remoteCloseReason": null,
    "reportCompressionRatio": false,
    "reportTime": false,
    "result": "Actual events are undefined by the spec.",
-   "resultClose": "Connection was properly closed",
-   "rxFrameStats": {},
+   "resultClose": "The close code should have been 1000,5000,1002 or empty",
+   "rxFrameStats": {
+      "8": 1
+   },
    "rxOctetStats": {
+      "8": 1,
       "187": 1
    },
-   "started": "2026-08-10T22:26:50.823Z",
+   "started": "2026-08-10T23:52:48.836Z",
    "trafficStats": null,
    "txFrameStats": {
       "8": 1
@@ -51,7 +54,7 @@
    },
    "wasClean": false,
    "wasCloseHandshakeTimeout": false,
-   "wasNotCleanReason": "peer dropped the TCP connection without previous WebSocket closing handshake",
+   "wasNotCleanReason": null,
    "wasOpenHandshakeTimeout": false,
    "wasServerConnectionDropTimeout": false,
    "wirelog": [
@@ -95,6 +98,25 @@
       [
          "KL",
          1
+      ],
+      [
+         "RO",
+         [
+            8,
+            "8882b3f91f751388"
+         ]
+      ],
+      [
+         "RF",
+         [
+            2,
+            "0xa071"
+         ],
+         8,
+         true,
+         0,
+         true,
+         "b3f91f75"
       ]
    ]
 }

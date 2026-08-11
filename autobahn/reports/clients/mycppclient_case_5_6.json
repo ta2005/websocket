@@ -1,14 +1,14 @@
 {
    "agent": "MyCppClient",
    "behavior": "FAILED",
-   "behaviorClose": "FAILED",
+   "behaviorClose": "OK",
    "case": 50,
-   "closedByMe": false,
+   "closedByMe": true,
    "createStats": true,
    "createWirelog": true,
    "description": "Send text Message fragmented into 2 fragments, one ping with payload in-between.",
-   "droppedByMe": false,
-   "duration": 3,
+   "droppedByMe": true,
+   "duration": 1009,
    "expectation": "A pong is received, then the message is echo'ed back to us.",
    "expected": {
       "OK": [
@@ -37,32 +37,45 @@
    "isServer": true,
    "localCloseCode": null,
    "localCloseReason": null,
-   "received": [],
+   "received": [
+      [
+         "message",
+         "fragment1",
+         false
+      ]
+   ],
    "remoteCloseCode": null,
    "remoteCloseReason": null,
    "reportCompressionRatio": false,
    "reportTime": false,
    "result": "Actual events differ from any expected.",
-   "resultClose": "The connection was failed by the wrong endpoint",
-   "rxFrameStats": {},
+   "resultClose": "Connection was properly closed",
+   "rxFrameStats": {
+      "1": 1,
+      "8": 1
+   },
    "rxOctetStats": {
+      "6": 1,
+      "15": 1,
       "186": 1
    },
-   "started": "2026-08-10T22:26:49.827Z",
+   "started": "2026-08-10T23:52:21.288Z",
    "trafficStats": null,
    "txFrameStats": {
       "0": 1,
       "1": 1,
+      "8": 1,
       "9": 1
    },
    "txOctetStats": {
+      "2": 1,
       "11": 2,
       "14": 1,
       "208": 1
    },
-   "wasClean": false,
+   "wasClean": true,
    "wasCloseHandshakeTimeout": false,
-   "wasNotCleanReason": "peer dropped the TCP connection without previous WebSocket closing handshake",
+   "wasNotCleanReason": null,
    "wasOpenHandshakeTimeout": false,
    "wasServerConnectionDropTimeout": false,
    "wirelog": [
@@ -150,6 +163,69 @@
       [
          "TI",
          1
+      ],
+      [
+         "RO",
+         [
+            15,
+            "8189291155ab4f6334cc44743bdf18"
+         ]
+      ],
+      [
+         "RF",
+         [
+            9,
+            "fragment1"
+         ],
+         1,
+         true,
+         0,
+         true,
+         "291155ab"
+      ],
+      [
+         "TIE"
+      ],
+      [
+         "TF",
+         [
+            0,
+            ""
+         ],
+         8,
+         true,
+         0,
+         null,
+         null,
+         null,
+         false
+      ],
+      [
+         "TO",
+         [
+            2,
+            "8800"
+         ],
+         false
+      ],
+      [
+         "RO",
+         [
+            6,
+            "88803554ee96"
+         ]
+      ],
+      [
+         "RF",
+         [
+            0,
+            ""
+         ],
+         8,
+         true,
+         0,
+         true,
+         "3554ee96"
       ]
    ]
 }

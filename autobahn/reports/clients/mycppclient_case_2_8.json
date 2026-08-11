@@ -7,8 +7,8 @@
    "createStats": true,
    "createWirelog": true,
    "description": "Send unsolicited pong with payload. Verify nothing is received. Clean close with normal code.",
-   "droppedByMe": false,
-   "duration": 3,
+   "droppedByMe": true,
+   "duration": 1004,
    "expectation": "Nothing.",
    "expected": {
       "OK": []
@@ -38,7 +38,7 @@
    "rxOctetStats": {
       "186": 1
    },
-   "started": "2026-08-10T22:26:45.614Z",
+   "started": "2026-08-10T23:52:07.803Z",
    "trafficStats": null,
    "txFrameStats": {
       "8": 1,
@@ -50,8 +50,8 @@
       "208": 1
    },
    "wasClean": false,
-   "wasCloseHandshakeTimeout": false,
-   "wasNotCleanReason": "peer dropped the TCP connection without previous WebSocket closing handshake",
+   "wasCloseHandshakeTimeout": true,
+   "wasNotCleanReason": "peer did not respond (in time) in closing handshake",
    "wasOpenHandshakeTimeout": false,
    "wasServerConnectionDropTimeout": false,
    "wirelog": [

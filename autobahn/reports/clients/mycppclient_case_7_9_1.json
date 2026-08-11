@@ -1,14 +1,14 @@
 {
    "agent": "MyCppClient",
-   "behavior": "OK",
-   "behaviorClose": "OK",
+   "behavior": "FAILED",
+   "behaviorClose": "WRONG CODE",
    "case": 236,
    "closedByMe": true,
    "createStats": true,
    "createWirelog": true,
    "description": "Send close with invalid close code 0",
-   "droppedByMe": false,
-   "duration": 2,
+   "droppedByMe": true,
+   "duration": 3,
    "expectation": "Clean close with protocol error code or drop TCP",
    "expected": {
       "OK": []
@@ -20,7 +20,7 @@
       "closedByMe": true,
       "requireClean": false
    },
-   "failedByMe": false,
+   "failedByMe": true,
    "httpRequest": "GET /runCase?case=236&agent=MyCppClient HTTP/1.1\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nHost: 127.0.0.1:9001\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n",
    "httpResponse": "HTTP/1.1 101 Switching Protocols\r\nServer: AutobahnTestSuite/25.10.1-0.10.9\r\nX-Powered-By: AutobahnPython/0.10.9\r\nUpgrade: WebSocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n",
    "id": "7.9.1",
@@ -28,17 +28,20 @@
    "localCloseCode": 0,
    "localCloseReason": null,
    "received": [],
-   "remoteCloseCode": null,
+   "remoteCloseCode": 54119,
    "remoteCloseReason": null,
    "reportCompressionRatio": false,
    "reportTime": false,
-   "result": "Actual events match at least one expected.",
-   "resultClose": "Connection was properly closed",
-   "rxFrameStats": {},
+   "result": "The close code should have been 1002 or empty",
+   "resultClose": "The close code should have been 1002 or empty",
+   "rxFrameStats": {
+      "8": 1
+   },
    "rxOctetStats": {
+      "8": 1,
       "187": 1
    },
-   "started": "2026-08-10T22:26:50.777Z",
+   "started": "2026-08-10T23:52:48.788Z",
    "trafficStats": null,
    "txFrameStats": {
       "8": 1
@@ -49,7 +52,7 @@
    },
    "wasClean": false,
    "wasCloseHandshakeTimeout": false,
-   "wasNotCleanReason": "peer dropped the TCP connection without previous WebSocket closing handshake",
+   "wasNotCleanReason": null,
    "wasOpenHandshakeTimeout": false,
    "wasServerConnectionDropTimeout": false,
    "wirelog": [
@@ -93,6 +96,25 @@
       [
          "KL",
          1
+      ],
+      [
+         "RO",
+         [
+            8,
+            "8882d367f6fe0000"
+         ]
+      ],
+      [
+         "RF",
+         [
+            2,
+            "0xd367"
+         ],
+         8,
+         true,
+         0,
+         true,
+         "d367f6fe"
       ]
    ]
 }

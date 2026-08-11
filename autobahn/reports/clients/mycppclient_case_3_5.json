@@ -8,7 +8,7 @@
    "createWirelog": true,
    "description": "Send small binary message with <b>RSV = 5</b>.",
    "droppedByMe": false,
-   "duration": 3,
+   "duration": 2,
    "expectation": "The connection is failed immediately, since RSV must be 0.",
    "expected": {
       "OK": []
@@ -38,7 +38,7 @@
    "rxOctetStats": {
       "186": 1
    },
-   "started": "2026-08-10T22:26:45.664Z",
+   "started": "2026-08-10T23:52:15.074Z",
    "trafficStats": null,
    "txFrameStats": {
       "2": 1

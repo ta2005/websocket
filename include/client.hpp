@@ -27,23 +27,22 @@ class Client {
 
     Client(TcpSocket s)
         : m_socket(std::move(s)), m_rng(std::random_device{}()) {};
-    std::expected<void, std::string_view> send_impl(std::span<const uint8_t>,
-                                                    opcode);
+    std::expected<void, Error> send_impl(std::span<const uint8_t>, opcode);
 
-    std::expected<void, std::string_view>
-        send_control_frame(std::span<const uint8_t>, opcode);
-    std::expected<ChunckView, std::string_view> read_chunck_impl(size_t);
+    std::expected<void, Error> send_control_frame(std::span<const uint8_t>,
+                                                  opcode);
+    std::expected<ChunckView, Error> read_chunck_impl(size_t);
 
   public:
-    std::expected<void, std::string_view> send(const std::string_view);
-    std::expected<void, std::string_view> send(std::span<const uint8_t>);
-    std::expected<void, std::string_view> send_ping(std::span<const uint8_t>);
-    std::expected<void, std::string_view> send_pong(std::span<const uint8_t>);
+    std::expected<void, Error> send(const std::string_view);
+    std::expected<void, Error> send(std::span<const uint8_t>);
+    std::expected<void, Error> send_ping(std::span<const uint8_t>);
+    std::expected<void, Error> send_pong(std::span<const uint8_t>);
     // next major update this will need to be and enum with an explanation
-    std::expected<void, std::string_view>       close(std::span<const uint8_t>);
-    std::expected<ChunckView, std::string_view> read_chunk();
+    std::expected<void, Error>       close(std::span<const uint8_t>);
+    std::expected<ChunckView, Error> read_chunk();
     // this one should be uri
-    static std::expected<Client, std::string_view>
+    static std::expected<Client, Error>
     create(const std::string_view host, const std::string_view path,
            const std::string_view port = "80");
 };

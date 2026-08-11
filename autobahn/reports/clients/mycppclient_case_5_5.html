@@ -202,14 +202,14 @@ pre.wirelog_tcp_closed_by_peer {color: #fff; margin: 0; background-color: #000; 
       <center><a href="https://autobahn-testsuite.readthedocs.io/" title="Autobahn WebSocket Testsuite"><img src="https://autobahn-testsuite.readthedocs.io/en/latest/_static/img/ws_protocol_test_report.png"          border="0" width="820" height="46" alt="Autobahn WebSocket Testsuite Report"></img></a></center>
       <center><a href="https://autobahn-testsuite.readthedocs.io/"           title="Autobahn WebSocket">          <img src="https://autobahn-testsuite.readthedocs.io/en/latest/_static/img/ws_protocol_test_report_autobahn.png" border="0" width="300" height="68" alt="Autobahn WebSocket">                 </img></a></center>
       <br/>
-      <p class="case case_failed">MyCppClient - <span style="font-size: 1.3em;"><b>Case 5.5</b></span> : Fail - <span style="font-size: 0.9em;"><b>3</b> ms @ 2026-08-10T22:26:49.823Z</a></p>
+      <p class="case case_failed">MyCppClient - <span style="font-size: 1.3em;"><b>Case 5.5</b></span> : Fail - <span style="font-size: 0.9em;"><b>22</b> ms @ 2026-08-10T23:52:21.263Z</a></p>
       <p class="case_text_block case_desc"><b>Case Description</b><br/><br/>Send text Message fragmented into 2 fragments, octets are sent in octet-wise chops.</p>
       <p class="case_text_block case_expect"><b>Case Expectation</b><br/><br/>Message is processed and echo'ed back to us.</p>
 
       <p class="case_text_block case_outcome">
          <b>Case Outcome</b><br/><br/>Actual events differ from any expected.<br/><br/>
          <i>Expected:</i><br/><span class="case_pickle">{'OK': [('message', u'fragment1fragment2', False)]}</span><br/><br/>
-         <i>Observed:</i><br><span class="case_pickle">[]</span>
+         <i>Observed:</i><br><span class="case_pickle">[('message', u'fragment1', False)]</span>
       </p>
       <p class="case_text_block case_closing_beh"><b>Case Closing Behavior</b><br/><br/>The connection was failed by the wrong endpoint (FAILED)</p>
       <br/><hr/>
@@ -248,20 +248,22 @@ Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=</pre>
       <h3>Octets Received by Chop Size</h3>
       <table>
          <tr class="stats_header"><td>Chop Size</td><td>Count</td><td>Octets</td></tr>
+         <tr class="stats_row"><td>15</td><td>1</td><td>15</td></tr>
          <tr class="stats_row"><td>186</td><td>1</td><td>186</td></tr>
-         <tr class="stats_total"><td>Total</td><td>1</td><td>186</td></tr>
+         <tr class="stats_total"><td>Total</td><td>2</td><td>201</td></tr>
       </table>
       <h3>Octets Transmitted by Chop Size</h3>
       <table>
          <tr class="stats_header"><td>Chop Size</td><td>Count</td><td>Octets</td></tr>
-         <tr class="stats_row"><td>1</td><td>5</td><td>5</td></tr>
+         <tr class="stats_row"><td>1</td><td>13</td><td>13</td></tr>
          <tr class="stats_row"><td>208</td><td>1</td><td>208</td></tr>
-         <tr class="stats_total"><td>Total</td><td>6</td><td>213</td></tr>
+         <tr class="stats_total"><td>Total</td><td>14</td><td>221</td></tr>
       </table>
       <h3>Frames Received by Opcode</h3>
       <table>
          <tr class="stats_header"><td>Opcode</td><td>Count</td></tr>
-         <tr class="stats_total"><td>Total</td><td>0</td></tr>
+         <tr class="stats_row"><td>1</td><td>1</td></tr>
+         <tr class="stats_total"><td>Total</td><td>1</td></tr>
       </table>
       <h3>Frames Transmitted by Opcode</h3>
       <table>
@@ -287,7 +289,18 @@ Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=</pre>
          <pre class="wirelog_tx_octets_sync">007 TX OCTETS: 66</pre>
          <pre class="wirelog_tx_octets_sync">008 TX OCTETS: 72</pre>
          <pre class="wirelog_tx_octets_sync">009 TX OCTETS: 61</pre>
-         <pre class="wirelog_tcp_closed_by_peer">010 TCP DROPPED BY PEER</pre>
+         <pre class="wirelog_tx_octets_sync">010 TX OCTETS: 67</pre>
+         <pre class="wirelog_tx_octets_sync">011 TX OCTETS: 6d</pre>
+         <pre class="wirelog_tx_octets_sync">012 TX OCTETS: 65</pre>
+         <pre class="wirelog_tx_octets_sync">013 TX OCTETS: 6e</pre>
+         <pre class="wirelog_tx_octets_sync">014 TX OCTETS: 74</pre>
+         <pre class="wirelog_tx_octets_sync">015 TX OCTETS: 31</pre>
+         <pre class="wirelog_tx_octets_sync">016 TX OCTETS: 80</pre>
+         <pre class="wirelog_rx_octets">017 RX OCTETS: 81894293b09824e1d1ff2ff6deec73</pre>
+         <pre class="wirelog_rx_frame">018 RX FRAME : OPCODE=1, FIN=True, RSV=0, PAYLOAD-LEN=9, MASKED=True, MASK=3432393362303938</pre>
+         <pre class="wirelog_rx_frame">               fragment1</pre>
+         <pre class="wirelog_tx_octets_sync">019 TX OCTETS: 09</pre>
+         <pre class="wirelog_tcp_closed_by_peer">020 TCP DROPPED BY PEER</pre>
       </div>
       <br/><hr/>
    </body>

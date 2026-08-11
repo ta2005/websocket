@@ -1,12 +1,12 @@
 #ifndef PARSE_META_HPP
 #define PARSE_META_HPP
 
+#include "error.hpp"
 #include "opcode.hpp"
 #include <cstdint>
 #include <expected>
 #include <netinet/in.h>
 #include <span>
-#include <string_view>
 
 namespace ws::detail {
 struct PayloadMetaData {
@@ -19,10 +19,10 @@ struct PayloadMetaData {
 };
 
 // this func i kind of useful
-constexpr std::expected<std::span<uint8_t>, std::string_view>
+constexpr std::expected<std::span<uint8_t>, Error>
 advance(std::span<uint8_t> &payload, size_t step = 1) {
     if (payload.size() < step) {
-        return std::unexpected("payload too short");
+        return std::unexpected(Error::PayloadTooShort);
     }
     auto ret = payload.subspan(0, step);
     payload  = payload.subspan(step);
@@ -35,7 +35,7 @@ advance(std::span<uint8_t> &payload, size_t step = 1) {
 // and then get a get_String
 // maybe i could have like some standard log(like the one in systemd
 // next release ???
-constexpr std::expected<PayloadMetaData, std::string_view>
+constexpr std::expected<PayloadMetaData, Error>
 parse_meta(std::span<uint8_t> payload) {
     PayloadMetaData res;
     res.meta_size = 2;
@@ -45,11 +45,11 @@ parse_meta(std::span<uint8_t> payload) {
     }
     res.fin = ((*meta)[0]) & 0x80;
     if (((*meta)[0] & 0x70) != 0) {
-        return std::unexpected("unspported extenstion");
+        return std::unexpected(Error::UnsupportedExtension);
     }
     auto op = get_opcode(((*meta)[0]) & 0x0F);
     if (op == opcode::unsupported) {
-        return std::unexpected("unsupported opcode");
+        return std::unexpected(Error::UnsupporOpcode);
     }
     res.op        = op;
     res.is_masked = ((*meta)[1]) & 0x80;
@@ -63,7 +63,7 @@ parse_meta(std::span<uint8_t> payload) {
 
         res.meta_size += 2;
         if (res.len < 126) {
-            return std::unexpected("inappropirate len");
+            return std::unexpected(Error::InvalidPayloadLength);
         }
     } else if (res.len == 127) {
         auto len_span = ws::detail::advance(payload, 8);
@@ -80,7 +80,7 @@ parse_meta(std::span<uint8_t> payload) {
                   static_cast<uint64_t>((*len_span)[7]);
 
         if (res.len <= 0xFFFF) {
-            return std::unexpected("inappropirate len");
+            return std::unexpected(Error::InvalidPayloadLength);
         }
         res.meta_size += 8;
     }

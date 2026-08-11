@@ -8,16 +8,16 @@
 
 namespace ws {
 
-std::expected<Client, std::string_view>
-Client::create(const std::string_view host, const std::string_view path,
-               const std::string_view port) {
+std::expected<Client, Error> Client::create(const std::string_view host,
+                                            const std::string_view path,
+                                            const std::string_view port) {
     auto s = TcpSocket::connect(host, port);
     if (!s) {
         return std::unexpected(s.error());
     }
     auto hk = perform_handshake(*s, host, path, port);
     if (!hk) {
-        ws::log::error("Handshake failed: {}", hk.error());
+        // ws::log::error("Handshake failed: {}", hk.error());
         return std::unexpected(hk.error());
     }
     ws::log::info("Client created and handshake complete");
@@ -29,22 +29,20 @@ Client::create(const std::string_view host, const std::string_view path,
     return c;
 }
 
-std::expected<void, std::string_view>
+std::expected<void, Error>
 Client::send_control_frame(std::span<const uint8_t> payload, opcode op) {
     if (payload.size() > 125) {
-        return std::unexpected(
-            "control frames must have a size of 125 or less");
+        return std::unexpected(Error::InvalidPayloadLength);
     }
     auto meta = detail::format_meta(true, true, op, payload.size(), m_rng());
-    auto sz   = m_socket.send(meta.span(), payload);
-    if (!sz) {
+    if (auto sz = m_socket.send(meta.span(), payload); !sz) {
         return std::unexpected(sz.error());
     }
     return {};
 }
 
-std::expected<void, std::string_view>
-Client::send_impl(std::span<const uint8_t> msg, opcode first_op) {
+std::expected<void, Error> Client::send_impl(std::span<const uint8_t> msg,
+                                             opcode first_op) {
     constexpr int                   chunk_size = 8 * 1024;
     bool                            first      = true;
     std::array<uint8_t, chunk_size> tmp;
@@ -60,9 +58,8 @@ Client::send_impl(std::span<const uint8_t> msg, opcode first_op) {
 
         ws::log::debug("Sending chunk of size {} bytes with opcode {}",
                        chunk_size, static_cast<int>(op));
-        auto l = m_socket.send(meta.span(), tmp);
-        if (!l) {
-            ws::log::error("Failed to send chunk: {}", l.error());
+        if (auto l = m_socket.send(meta.span(), tmp); !l) {
+            // ws::log::error("Failed to send chunk: {}", l.error());
             return std::unexpected(l.error());
         }
         msg   = msg.subspan(chunk_size);
@@ -77,54 +74,48 @@ Client::send_impl(std::span<const uint8_t> msg, opcode first_op) {
 
     ws::log::debug("Sending final chunk of size {} bytes with opcode {}",
                    msg.size(), static_cast<int>(op));
-    auto l = m_socket.send(meta.span(), {tmp.data(), msg.size()});
-    if (!l) {
-        ws::log::error("Failed to send final chunk: {}", l.error());
+    if (auto l = m_socket.send(meta.span(), {tmp.data(), msg.size()}); !l) {
+        // ws::log::error("Failed to send final chunk: {}", l.error());
         return std::unexpected(l.error());
     }
     return {};
 }
 
-std::expected<void, std::string_view>
-Client::send(std::span<const uint8_t> msg) {
+std::expected<void, Error> Client::send(std::span<const uint8_t> msg) {
     return send_impl(msg, opcode::binary);
 }
 
-std::expected<void, std::string_view> Client::send(const std::string_view msg) {
+std::expected<void, Error> Client::send(const std::string_view msg) {
     if (!simdutf::validate_utf8(msg.data(), msg.size())) {
-        return std::unexpected("invalid uft8");
+        return std::unexpected(Error::InvalidUTF8);
     }
     auto buf = std::span<const uint8_t>(
         reinterpret_cast<const uint8_t *>(msg.data()), msg.size());
     return send_impl(buf, opcode::text);
 }
 
-std::expected<void, std::string_view>
-Client::close(std::span<const uint8_t> payload) {
+std::expected<void, Error> Client::close(std::span<const uint8_t> payload) {
     return send_control_frame(payload, opcode::close);
 }
 
 // this should be an internal function of send control
 // and then the dispatching happens with each one seding its own opcode
 // and payload
-std::expected<void, std::string_view>
-Client::send_ping(std::span<const uint8_t> payload) {
+std::expected<void, Error> Client::send_ping(std::span<const uint8_t> payload) {
     return send_control_frame(payload, opcode::ping);
 }
 
-std::expected<void, std::string_view>
-Client::send_pong(std::span<const uint8_t> payload) {
+std::expected<void, Error> Client::send_pong(std::span<const uint8_t> payload) {
     return send_control_frame(payload, opcode::pong);
 }
 
-std::expected<ChunckView, std::string_view>
-Client::read_chunck_impl(size_t first_read) {
+std::expected<ChunckView, Error> Client::read_chunck_impl(size_t first_read) {
     constexpr int chunk_size  = 8 * 1024;
     auto         &buffer      = current_read.data;
     auto          parsed_meta = detail::parse_meta({buffer.data(), first_read});
     if (!parsed_meta) {
-        ws::log::error("[READ ERROR] Failed to parse frame metadata: {}",
-                       parsed_meta.error());
+        // ws::log::error("[READ ERROR] Failed to parse frame metadata: {}",
+        //                parsed_meta.error());
         return std::unexpected(parsed_meta.error());
     }
     // 1. Log Parsed Metadata
@@ -137,14 +128,13 @@ Client::read_chunck_impl(size_t first_read) {
     ws::log::debug("  Payload L: {} bytes", parsed_meta->len);
     ws::log::debug("  Header Size: {} bytes", parsed_meta->meta_size);
     if (parsed_meta->is_masked) {
-        return std::unexpected("payload from the server should not be masked");
+        return std::unexpected(Error::UnmaskedServerPayload);
     }
     if (is_control(parsed_meta->op) && !parsed_meta->fin) {
-        return std::unexpected("control frames must be be fin");
+        return std::unexpected(Error::NonFinControlFrame);
     }
     if (is_control(parsed_meta->op) && parsed_meta->len > 125) {
-        return std::unexpected(
-            "control frames must have a size of 125 or less");
+        return std::unexpected(Error::InvalidPayloadLength);
     }
     current_read.fin  = parsed_meta->fin;
     current_read.type = parsed_meta->op;
@@ -173,9 +163,9 @@ Client::read_chunck_impl(size_t first_read) {
     }
     switch (parsed_meta->op) {
         case opcode::ping: {
-            auto pong_res = send_pong({buffer.data(), parsed_meta->len});
-            if (!pong_res) {
-                return std::unexpected("unable to respond to ping");
+            if (auto pong_res = send_pong({buffer.data(), parsed_meta->len});
+                !pong_res) {
+                return std::unexpected(pong_res.error());
             }
             return read_chunk();
         } break;
@@ -184,13 +174,13 @@ Client::read_chunck_impl(size_t first_read) {
                                         parsed_meta->len)) {
                 ws::log::error("[READ ERROR] UTF-8 validation failed on text "
                                "frame payload");
-                return std::unexpected("invalid uft8");
+                return std::unexpected(Error::InvalidUTF8);
             }
             break;
         case opcode::close: {
             if (auto close_res = close({buffer.data(), parsed_meta->len});
                 !close_res) {
-                return std::unexpected("unable to echo close frame");
+                return std::unexpected(close_res.error());
             }
         } break;
         default:;
@@ -201,7 +191,7 @@ Client::read_chunck_impl(size_t first_read) {
     return res;
 }
 
-std::expected<ChunckView, std::string_view> Client::read_chunk() {
+std::expected<ChunckView, Error> Client::read_chunk() {
     // i need to add a function to parse the header
     // detail::parse_meta();
     constexpr int chunk_size = 8 * 1024;

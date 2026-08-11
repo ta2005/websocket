@@ -1,14 +1,14 @@
 {
    "agent": "MyCppClient",
    "behavior": "FAILED",
-   "behaviorClose": "FAILED",
+   "behaviorClose": "OK",
    "case": 18,
-   "closedByMe": false,
+   "closedByMe": true,
    "createStats": true,
    "createWirelog": true,
    "description": "Send ping with small text payload.",
-   "droppedByMe": false,
-   "duration": 2,
+   "droppedByMe": true,
+   "duration": 1012,
    "expectation": "Pong with payload echo'ed is sent in reply to Ping. Clean close with normal code.",
    "expected": {
       "OK": [
@@ -32,29 +32,41 @@
    "isServer": true,
    "localCloseCode": null,
    "localCloseReason": null,
-   "received": [],
+   "received": [
+      [
+         "pong",
+         "0x14c61c6b338f507033d11c637d"
+      ]
+   ],
    "remoteCloseCode": null,
    "remoteCloseReason": null,
    "reportCompressionRatio": false,
    "reportTime": false,
    "result": "Actual events differ from any expected.",
-   "resultClose": "The connection was failed by the wrong endpoint",
-   "rxFrameStats": {},
+   "resultClose": "Connection was properly closed",
+   "rxFrameStats": {
+      "8": 1,
+      "10": 1
+   },
    "rxOctetStats": {
+      "6": 1,
+      "19": 1,
       "186": 1
    },
-   "started": "2026-08-10T22:26:45.583Z",
+   "started": "2026-08-10T23:52:01.727Z",
    "trafficStats": null,
    "txFrameStats": {
+      "8": 1,
       "9": 1
    },
    "txOctetStats": {
+      "2": 1,
       "15": 1,
       "208": 1
    },
-   "wasClean": false,
+   "wasClean": true,
    "wasCloseHandshakeTimeout": false,
-   "wasNotCleanReason": "peer dropped the TCP connection without previous WebSocket closing handshake",
+   "wasNotCleanReason": null,
    "wasOpenHandshakeTimeout": false,
    "wasServerConnectionDropTimeout": false,
    "wirelog": [
@@ -98,6 +110,69 @@
       [
          "TI",
          1
+      ],
+      [
+         "RO",
+         [
+            19,
+            "8a8d5ca3700748656c6c6f2c20776f726c6421"
+         ]
+      ],
+      [
+         "RF",
+         [
+            13,
+            "0x14c61c6b338f507033d11c637d"
+         ],
+         10,
+         true,
+         0,
+         true,
+         "5ca37007"
+      ],
+      [
+         "TIE"
+      ],
+      [
+         "TF",
+         [
+            0,
+            ""
+         ],
+         8,
+         true,
+         0,
+         null,
+         null,
+         null,
+         false
+      ],
+      [
+         "TO",
+         [
+            2,
+            "8800"
+         ],
+         false
+      ],
+      [
+         "RO",
+         [
+            6,
+            "8880b75b00fe"
+         ]
+      ],
+      [
+         "RF",
+         [
+            0,
+            ""
+         ],
+         8,
+         true,
+         0,
+         true,
+         "b75b00fe"
       ]
    ]
 }

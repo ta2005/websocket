@@ -18,11 +18,17 @@ enum class Error {
     InvalidStatusCode,
     HandshakeRejected,
     MissingHeaders,
+    DeduplicateHeaders,
+    FoundNoNewLine,
+    InvalidToken,
+    ParseError,
 
     // Parsing & Framing
     NeedMoreBytes, // Return this when a read didn't contain a full frame header
                    // yet!
     PayloadTooShort,
+    NonFinControlFrame,
+    UnsupporOpcode,
     UnsupportedExtension, // RSV bits set without negotiation
     InvalidPayloadLength, // E.g. using 64-bit length for a 10-byte payload
     InvalidUTF8,

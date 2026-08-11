@@ -8,7 +8,7 @@
    "createWirelog": true,
    "description": "Send text message with payload of length 65536 auto-fragmented with <b>autoFragmentSize = 1300</b>.",
    "droppedByMe": false,
-   "duration": 7,
+   "duration": 6,
    "expectation": "Receive echo'ed text message (with payload as sent and transmitted frame counts as expected). Clean close with normal code.",
    "expected": {
       "OK": [
@@ -33,18 +33,27 @@
    "isServer": true,
    "localCloseCode": null,
    "localCloseReason": null,
-   "received": [],
+   "received": [
+      [
+         "message",
+         "**************************************************************** ...",
+         false
+      ]
+   ],
    "remoteCloseCode": null,
    "remoteCloseReason": null,
    "reportCompressionRatio": false,
    "reportTime": false,
    "result": "Actual events differ from any expected.",
    "resultClose": "The connection was failed by the wrong endpoint",
-   "rxFrameStats": {},
-   "rxOctetStats": {
-      "187": 1
+   "rxFrameStats": {
+      "1": 1
    },
-   "started": "2026-08-10T22:26:50.832Z",
+   "rxOctetStats": {
+      "187": 1,
+      "1308": 1
+   },
+   "started": "2026-08-10T23:52:48.845Z",
    "trafficStats": null,
    "txFrameStats": {
       "0": 50,
@@ -1201,6 +1210,25 @@
       [
          "KL",
          10
+      ],
+      [
+         "RO",
+         [
+            1308,
+            "81fe05145d7ab69877509cb277509cb277509cb277509cb277509cb277509cb277509cb277509cb277509cb277509cb277509cb277509cb277509cb277509cb2 ..."
+         ]
+      ],
+      [
+         "RF",
+         [
+            1300,
+            "**************************************************************** ..."
+         ],
+         1,
+         true,
+         0,
+         true,
+         "5d7ab698"
       ]
    ]
 }

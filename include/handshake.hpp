@@ -22,7 +22,7 @@ struct HandskaheResult {
     std::vector<uint8_t> leftover;
 };
 
-std::expected<HandskaheResult, std::string_view>
+std::expected<HandskaheResult, Error>
 perform_handshake(const TcpSocket &, const std::string_view host,
                   const std::string_view path,
                   const std::string_view port = "80");

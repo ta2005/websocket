@@ -1,14 +1,14 @@
 {
    "agent": "MyCppClient",
    "behavior": "FAILED",
-   "behaviorClose": "FAILED",
+   "behaviorClose": "OK",
    "case": 19,
-   "closedByMe": false,
+   "closedByMe": true,
    "createStats": true,
    "createWirelog": true,
    "description": "Send ping with small binary (non UTF-8) payload.",
-   "droppedByMe": false,
-   "duration": 3,
+   "droppedByMe": true,
+   "duration": 1012,
    "expectation": "Pong with payload echo'ed is sent in reply to Ping. Clean close with normal code.",
    "expected": {
       "OK": [
@@ -32,29 +32,41 @@
    "isServer": true,
    "localCloseCode": null,
    "localCloseReason": null,
-   "received": [],
+   "received": [
+      [
+         "pong",
+         "0x0a887168f68c8f6a"
+      ]
+   ],
    "remoteCloseCode": null,
    "remoteCloseReason": null,
    "reportCompressionRatio": false,
    "reportTime": false,
    "result": "Actual events differ from any expected.",
-   "resultClose": "The connection was failed by the wrong endpoint",
-   "rxFrameStats": {},
+   "resultClose": "Connection was properly closed",
+   "rxFrameStats": {
+      "8": 1,
+      "10": 1
+   },
    "rxOctetStats": {
+      "6": 1,
+      "14": 1,
       "186": 1
    },
-   "started": "2026-08-10T22:26:45.588Z",
+   "started": "2026-08-10T23:52:02.747Z",
    "trafficStats": null,
    "txFrameStats": {
+      "8": 1,
       "9": 1
    },
    "txOctetStats": {
+      "2": 1,
       "10": 1,
       "208": 1
    },
-   "wasClean": false,
+   "wasClean": true,
    "wasCloseHandshakeTimeout": false,
-   "wasNotCleanReason": "peer dropped the TCP connection without previous WebSocket closing handshake",
+   "wasNotCleanReason": null,
    "wasOpenHandshakeTimeout": false,
    "wasServerConnectionDropTimeout": false,
    "wirelog": [
@@ -98,6 +110,69 @@
       [
          "TI",
          1
+      ],
+      [
+         "RO",
+         [
+            14,
+            "8a880a778f9500fffefdfcfb00ff"
+         ]
+      ],
+      [
+         "RF",
+         [
+            8,
+            "0x0a887168f68c8f6a"
+         ],
+         10,
+         true,
+         0,
+         true,
+         "0a778f95"
+      ],
+      [
+         "TIE"
+      ],
+      [
+         "TF",
+         [
+            0,
+            ""
+         ],
+         8,
+         true,
+         0,
+         null,
+         null,
+         null,
+         false
+      ],
+      [
+         "TO",
+         [
+            2,
+            "8800"
+         ],
+         false
+      ],
+      [
+         "RO",
+         [
+            6,
+            "8880762c40b3"
+         ]
+      ],
+      [
+         "RF",
+         [
+            0,
+            ""
+         ],
+         8,
+         true,
+         0,
+         true,
+         "762c40b3"
       ]
    ]
 }

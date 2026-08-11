@@ -53,9 +53,10 @@ bool iequals(std::string_view a, std::string_view b) {
     });
 }
 
-std::expected<void, std::string_view>
-send_handshake(const TcpSocket &socket, const std::string_view host,
-               const std::string_view path, const std::string_view port) {
+std::expected<void, Error> send_handshake(const TcpSocket       &socket,
+                                          const std::string_view host,
+                                          const std::string_view path,
+                                          const std::string_view port) {
     // this is just place holder that jsut works of course i can then use the
     // same stratgey as curl and get these fields from the command line
 
@@ -78,12 +79,11 @@ send_handshake(const TcpSocket &socket, const std::string_view host,
 // i could have done this one ocaml sytle with
 // line * rest
 // but i would need to make the other function recursive
-std::expected<std::string_view, std::string_view>
-get_line(std::string_view &buf) {
+std::expected<std::string_view, Error> get_line(std::string_view &buf) {
     auto pos = buf.find('\n');
     if (pos == std::string_view::npos) {
         // put all the rest into line;
-        return std::unexpected("found no \\n");
+        return std::unexpected(Error::FoundNoNewLine);
     }
     std::string_view line = buf.substr(0, pos);
     buf                   = buf.substr(pos + 1);
@@ -93,18 +93,18 @@ get_line(std::string_view &buf) {
     return line;
 }
 
-std::expected<StatusLine, std::string_view>
+std::expected<StatusLine, Error>
 parse_status_line(const std::string_view line) {
     // the line i get should never have \r or \r in it
     StatusLine res{};
     if (line.find('\r') != std::string_view::npos ||
         line.find('\n') != std::string_view::npos) {
-        return std::unexpected("unexpected line feed in stautus-line");
+        return std::unexpected(Error::InvalidToken);
     }
     size_t sp1 = line.find(' ');
     if (sp1 == std::string_view::npos) {
         ws::log::error("Invalid status line: Unable to find the HTTP version");
-        return std::unexpected("invalid line:Unable to find the version");
+        return std::unexpected(Error::ParseError);
     }
     res.version = line.substr(0, sp1);
     // this should suffice for now but i will implement the comsume nbr fnct
@@ -112,17 +112,17 @@ parse_status_line(const std::string_view line) {
     if (res.version != "HTTP/1.1") {
         ws::log::error("Invalid HTTP version: Expected HTTP/1.1, got {}",
                        res.version);
-        return std::unexpected("invalid http version: expected HTTP/1.1");
+        return std::unexpected(Error::InvalidHttpVersion);
     }
     size_t sp2 = line.find(' ', sp1 + 1);
     if (sp2 == std::string_view::npos) {
         ws::log::error("Invalid status line: Unable to find the status code");
-        return std::unexpected("invalid line:Unable to find the status code");
+        return std::unexpected(Error::ParseError);
     }
     auto st = line.substr(sp1 + 1, sp2 - sp1 - 1);
     if (((sp2 - sp1 - 1) != 3) || st < "100" || st > "599") {
         ws::log::error("Invalid status line: Invalid status number '{}'", st);
-        return std::unexpected("invalide line:invalid status nbr");
+        return std::unexpected(Error::InvalidStatusCode);
     }
     res.status = (st[2] - '0') + 10 * (st[1] - '0') + 100 * (st[0] - '0');
     // it can be empty i don't care
@@ -130,13 +130,14 @@ parse_status_line(const std::string_view line) {
     return res;
 }
 
-std::expected<std::pair<HandskaheResult, size_t>, std::string_view>
+std::expected<std::pair<HandskaheResult, size_t>, Error>
 parse_headers(const std::string_view headers) {
     auto tmphd       = headers;
     auto status_line = get_line(tmphd).and_then(parse_status_line);
     // parse_status_line;
     if (!status_line) {
-        ws::log::error("Failed to parse status line: {}", status_line.error());
+        // ws::log::error("Failed to parse status line: {}",
+        // status_line.error());
         return std::unexpected(status_line.error());
     }
     HandskaheResult res;
@@ -154,30 +155,30 @@ parse_headers(const std::string_view headers) {
         // and then used and_then
         auto colon_pos = current_line->find(':');
         if (colon_pos == std::string_view::npos) {
-            return std::unexpected("invalid line header no colon was found");
+            return std::unexpected(Error::ParseError);
         }
         auto key = current_line->substr(0, colon_pos);
         if (!is_field_name(key)) {
-            return std::unexpected("invalid header:not a field name");
+            return std::unexpected(Error::ParseError);
         }
         auto value = current_line->substr(colon_pos + 1);
         value      = drop_space_and_tab(value);
         if (!is_field_value(value)) {
-            return std::unexpected("invalid header:not a value name");
+            return std::unexpected(Error::ParseError);
         }
         ws::log::debug("Parsed header: [{}] = [{}]", key, value);
 
         if (iequals(key, "Upgrade")) {
             if (!res.upgrade.empty())
-                return std::unexpected("Duplicate Upgrade header");
+                return std::unexpected(Error::DeduplicateHeaders);
             res.upgrade = value;
         } else if (iequals(key, "Connection")) {
             if (!res.connection.empty())
-                return std::unexpected("Duplicate Connection header");
+                return std::unexpected(Error::DeduplicateHeaders);
             res.connection = value;
         } else if (iequals(key, "Sec-WebSocket-Accept")) {
             if (!res.accept_key.empty())
-                return std::unexpected("Duplicate Sec-WebSocket-Accept header");
+                return std::unexpected(Error::DeduplicateHeaders);
             res.accept_key = value;
         }
         // Extensions and protocol could technically be comma-separated, but we
@@ -192,7 +193,7 @@ parse_headers(const std::string_view headers) {
     size_t header_len = headers.size() - tmphd.size();
     return std::pair{res, header_len};
 }
-std::expected<HandskaheResult, std::string_view>
+std::expected<HandskaheResult, Error>
 perform_handshake(const TcpSocket &socket, const std::string_view host,
                   const std::string_view path, const std::string_view port) {
     auto res = send_handshake(socket, host, path, port);

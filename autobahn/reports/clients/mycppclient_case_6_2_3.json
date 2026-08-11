@@ -1,14 +1,14 @@
 {
    "agent": "MyCppClient",
    "behavior": "FAILED",
-   "behaviorClose": "FAILED",
+   "behaviorClose": "OK",
    "case": 70,
-   "closedByMe": false,
+   "closedByMe": true,
    "createStats": true,
    "createWirelog": true,
    "description": "Send a valid UTF-8 text message in fragments of 1 octet, resulting in frames ending on positions which are not code point ends.<br><br>MESSAGE:<br>Hello-\u00b5@\u00df\u00f6\u00e4\u00fc\u00e0\u00e1-UTF-8!!<br>48656c6c6f2dc2b540c39fc3b6c3a4c3bcc3a0c3a12d5554462d382121",
-   "droppedByMe": false,
-   "duration": 4,
+   "droppedByMe": true,
+   "duration": 1009,
    "expectation": "The message is echo'ed back to us.",
    "expected": {
       "OK": [
@@ -33,31 +33,43 @@
    "isServer": true,
    "localCloseCode": null,
    "localCloseReason": null,
-   "received": [],
+   "received": [
+      [
+         "message",
+         "H",
+         false
+      ]
+   ],
    "remoteCloseCode": null,
    "remoteCloseReason": null,
    "reportCompressionRatio": false,
    "reportTime": false,
    "result": "Actual events differ from any expected.",
-   "resultClose": "The connection was failed by the wrong endpoint",
-   "rxFrameStats": {},
+   "resultClose": "Connection was properly closed",
+   "rxFrameStats": {
+      "1": 1,
+      "8": 1
+   },
    "rxOctetStats": {
+      "6": 1,
+      "7": 1,
       "186": 1
    },
-   "started": "2026-08-10T22:26:49.936Z",
+   "started": "2026-08-10T23:52:37.654Z",
    "trafficStats": null,
    "txFrameStats": {
       "0": 29,
-      "1": 1
+      "1": 1,
+      "8": 1
    },
    "txOctetStats": {
-      "2": 1,
+      "2": 2,
       "3": 29,
       "208": 1
    },
-   "wasClean": false,
+   "wasClean": true,
    "wasCloseHandshakeTimeout": false,
-   "wasNotCleanReason": "peer dropped the TCP connection without previous WebSocket closing handshake",
+   "wasNotCleanReason": null,
    "wasOpenHandshakeTimeout": false,
    "wasServerConnectionDropTimeout": false,
    "wirelog": [
@@ -739,6 +751,69 @@
       [
          "TI",
          1
+      ],
+      [
+         "RO",
+         [
+            7,
+            "8181cad944e682"
+         ]
+      ],
+      [
+         "RF",
+         [
+            1,
+            "H"
+         ],
+         1,
+         true,
+         0,
+         true,
+         "cad944e6"
+      ],
+      [
+         "TIE"
+      ],
+      [
+         "TF",
+         [
+            0,
+            ""
+         ],
+         8,
+         true,
+         0,
+         null,
+         null,
+         null,
+         false
+      ],
+      [
+         "TO",
+         [
+            2,
+            "8800"
+         ],
+         false
+      ],
+      [
+         "RO",
+         [
+            6,
+            "8880cf119c92"
+         ]
+      ],
+      [
+         "RF",
+         [
+            0,
+            ""
+         ],
+         8,
+         true,
+         0,
+         true,
+         "cf119c92"
       ]
    ]
 }

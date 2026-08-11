@@ -8,7 +8,7 @@
    "createWirelog": true,
    "description": "Send text message with payload 0.",
    "droppedByMe": true,
-   "duration": 7,
+   "duration": 10,
    "expectation": "Receive echo'ed text message (with empty payload). Clean close with normal code.",
    "expected": {
       "OK": [
@@ -40,7 +40,7 @@
          false
       ]
    ],
-   "remoteCloseCode": 2271,
+   "remoteCloseCode": 38644,
    "remoteCloseReason": null,
    "reportCompressionRatio": false,
    "reportTime": false,
@@ -55,7 +55,7 @@
       "8": 1,
       "185": 1
    },
-   "started": "2026-08-10T23:08:33.474Z",
+   "started": "2026-08-10T23:52:01.053Z",
    "trafficStats": null,
    "txFrameStats": {
       "1": 1,
@@ -117,7 +117,7 @@
          "RO",
          [
             6,
-            "81803ad57319"
+            "8180b166f5c2"
          ]
       ],
       [
@@ -130,7 +130,7 @@
          true,
          0,
          true,
-         "3ad57319"
+         "b166f5c2"
       ],
       [
          "TF",
@@ -158,20 +158,20 @@
          "RO",
          [
             8,
-            "88820b37cafa03e8"
+            "8882951c303403e8"
          ]
       ],
       [
          "RF",
          [
             2,
-            "0x08df"
+            "0x96f4"
          ],
          8,
          true,
          0,
          true,
-         "0b37cafa"
+         "951c3034"
       ]
    ]
 }
