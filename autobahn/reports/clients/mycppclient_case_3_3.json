@@ -8,7 +8,7 @@
    "createWirelog": true,
    "description": "Send small text message, then send again with <b>RSV = 3</b>, then send Ping. Octets are sent in frame-wise chops. Octets are sent in octet-wise chops.",
    "droppedByMe": false,
-   "duration": 4,
+   "duration": 3,
    "expectation": "Echo for first message is received, but then connection is failed immediately, since RSV must be 0, when no extension defining RSV meaning has been negotiated. The Pong is not received.",
    "expected": {
       "NON-STRICT": [],
@@ -54,7 +54,7 @@
       "19": 1,
       "186": 1
    },
-   "started": "2026-08-12T09:03:32.150Z",
+   "started": "2026-08-12T14:01:13.845Z",
    "trafficStats": null,
    "txFrameStats": {
       "1": 2,
@@ -160,7 +160,7 @@
          "RO",
          [
             19,
-            "818d340597d47c60fbb85b29b7a35b77fbb015"
+            "818dfd066212b5630e7e922a426592740e76dc"
          ]
       ],
       [
@@ -173,7 +173,7 @@
          true,
          0,
          true,
-         "340597d4"
+         "fd066212"
       ]
    ]
 }

@@ -8,7 +8,7 @@
    "createWirelog": true,
    "description": "Send text Message fragmented into 2 fragments, one ping with payload in-between. Octets are sent in frame-wise chops.",
    "droppedByMe": false,
-   "duration": 60,
+   "duration": 51,
    "expectation": "A pong is received, then the message is echo'ed back to us.",
    "expected": {
       "OK": [
@@ -63,7 +63,7 @@
       "24": 1,
       "186": 1
    },
-   "started": "2026-08-12T09:03:32.349Z",
+   "started": "2026-08-12T14:01:14.040Z",
    "trafficStats": null,
    "txFrameStats": {
       "0": 1,
@@ -172,7 +172,7 @@
          "RO",
          [
             18,
-            "8a8c0cf9f9767c9097112c89980f60969812"
+            "8a8c6543293c152a475b45334845092c4858"
          ]
       ],
       [
@@ -185,13 +185,13 @@
          true,
          0,
          true,
-         "0cf9f976"
+         "6543293c"
       ],
       [
          "RO",
          [
             24,
-            "8192cd3140beab4321d9a0542ecafc5732dfaa5c25d0b903"
+            "819276df3a4b10ad5b2c1bba543f47b9482a11b25f2502ed"
          ]
       ],
       [
@@ -204,7 +204,7 @@
          true,
          0,
          true,
-         "cd3140be"
+         "76df3a4b"
       ],
       [
          "TF",

@@ -8,7 +8,7 @@
    "createWirelog": true,
    "description": "Send ping with small text payload.",
    "droppedByMe": false,
-   "duration": 4,
+   "duration": 5,
    "expectation": "Pong with payload echo'ed is sent in reply to Ping. Clean close with normal code.",
    "expected": {
       "OK": [
@@ -51,7 +51,7 @@
       "19": 1,
       "186": 1
    },
-   "started": "2026-08-12T09:03:31.944Z",
+   "started": "2026-08-12T14:01:13.619Z",
    "trafficStats": null,
    "txFrameStats": {
       "8": 1,
@@ -113,7 +113,7 @@
          "RO",
          [
             19,
-            "8a8d7f5c3bfa3739579610701b8d102e579e5e"
+            "8a8d1c16e0fb54738c97733ac08c73648c9f3d"
          ]
       ],
       [
@@ -126,7 +126,7 @@
          true,
          0,
          true,
-         "7f5c3bfa"
+         "1c16e0fb"
       ],
       [
          "TF",

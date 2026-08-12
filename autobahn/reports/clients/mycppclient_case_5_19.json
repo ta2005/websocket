@@ -8,7 +8,7 @@
    "createWirelog": true,
    "description": "A fragmented text message is sent in multiple frames. After\n   sending the first 2 frames of the text message, a Ping is sent. Then we wait 1s,\n   then we send 2 more text fragments, another Ping and then the final text fragment.\n   Everything is legal.",
    "droppedByMe": false,
-   "duration": 1026,
+   "duration": 1014,
    "expectation": "The peer immediately answers the first Ping before\n   it has received the last text message fragment. The peer pong's back the Ping's\n   payload exactly, and echo's the payload of the fragmented message back to us.",
    "expected": {
       "OK": [
@@ -71,7 +71,7 @@
       "51": 1,
       "186": 1
    },
-   "started": "2026-08-12T09:03:32.569Z",
+   "started": "2026-08-12T14:01:14.242Z",
    "trafficStats": null,
    "txFrameStats": {
       "0": 4,
@@ -180,7 +180,7 @@
          "RO",
          [
             15,
-            "8a89f9ed8ca78982e2c09488ac96d8"
+            "8a897a2919160a467771174c39275b"
          ]
       ],
       [
@@ -193,7 +193,7 @@
          true,
          0,
          true,
-         "f9ed8ca7"
+         "7a291916"
       ],
       [
          "CTE",
@@ -295,7 +295,7 @@
          "RO",
          [
             15,
-            "8a899c383eadec5750caf15d1e9fbd"
+            "8a899d02f146ed6d9f21f067d174bc"
          ]
       ],
       [
@@ -308,13 +308,13 @@
          true,
          0,
          true,
-         "9c383ead"
+         "9d02f146"
       ],
       [
          "RO",
          [
             51,
-            "81ad1fc6513979b4305e72a33f4d2ea0235878ab34576bf4374b7ea13c5c71b2625f6da736547aa8250d79b4305e72a33f4d2a"
+            "81adabf4a81acd86c97dc691c66e9a92da7bcc99cd74dfc6ce68ca93c57fc5809b7cd995cf77ce9adc2ecd86c97dc691c66e9e"
          ]
       ],
       [
@@ -327,7 +327,7 @@
          true,
          0,
          true,
-         "1fc65139"
+         "abf4a81a"
       ],
       [
          "TF",

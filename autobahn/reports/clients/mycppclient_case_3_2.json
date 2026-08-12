@@ -1,13 +1,13 @@
 {
    "agent": "MyCppClient",
    "behavior": "OK",
-   "behaviorClose": "OK",
+   "behaviorClose": "WRONG CODE",
    "case": 29,
    "closedByMe": false,
    "createStats": true,
    "createWirelog": true,
    "description": "Send small text message, then send again with <b>RSV = 2</b>, then send Ping.",
-   "droppedByMe": false,
+   "droppedByMe": true,
    "duration": 4,
    "expectation": "Echo for first message is received, but then connection is failed immediately, since RSV must be 0, when no extension defining RSV meaning has been negotiated. The Pong is not received.",
    "expected": {
@@ -32,7 +32,7 @@
    "httpResponse": "HTTP/1.1 101 Switching Protocols\r\nServer: AutobahnTestSuite/25.10.1-0.10.9\r\nX-Powered-By: AutobahnPython/0.10.9\r\nUpgrade: WebSocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n",
    "id": "3.2",
    "isServer": true,
-   "localCloseCode": null,
+   "localCloseCode": 1000,
    "localCloseReason": null,
    "received": [
       [
@@ -41,33 +41,37 @@
          false
       ]
    ],
-   "remoteCloseCode": null,
+   "remoteCloseCode": 1010,
    "remoteCloseReason": null,
    "reportCompressionRatio": false,
    "reportTime": false,
    "result": "Actual events match at least one expected.",
-   "resultClose": "Connection was properly closed",
+   "resultClose": "The close code should have been 1002 or empty",
    "rxFrameStats": {
-      "1": 1
+      "1": 1,
+      "8": 1
    },
    "rxOctetStats": {
+      "8": 1,
       "19": 1,
       "186": 1
    },
-   "started": "2026-08-12T09:03:32.144Z",
+   "started": "2026-08-12T14:01:13.840Z",
    "trafficStats": null,
    "txFrameStats": {
       "1": 2,
+      "8": 1,
       "9": 1
    },
    "txOctetStats": {
       "2": 1,
+      "4": 1,
       "15": 2,
       "208": 1
    },
-   "wasClean": false,
+   "wasClean": true,
    "wasCloseHandshakeTimeout": false,
-   "wasNotCleanReason": "peer dropped the TCP connection without previous WebSocket closing handshake",
+   "wasNotCleanReason": null,
    "wasOpenHandshakeTimeout": false,
    "wasServerConnectionDropTimeout": false,
    "wirelog": [
@@ -160,7 +164,7 @@
          "RO",
          [
             19,
-            "818d107f93b9581affd57f53b3ce7f0dffdd31"
+            "818d1e1d4dc1567821ad71316db6716f21a53f"
          ]
       ],
       [
@@ -173,7 +177,48 @@
          true,
          0,
          true,
-         "107f93b9"
+         "1e1d4dc1"
+      ],
+      [
+         "RO",
+         [
+            8,
+            "888277df22a8742d"
+         ]
+      ],
+      [
+         "RF",
+         [
+            2,
+            "0x03f2"
+         ],
+         8,
+         true,
+         0,
+         true,
+         "77df22a8"
+      ],
+      [
+         "TF",
+         [
+            2,
+            "0x03e8"
+         ],
+         8,
+         true,
+         0,
+         null,
+         null,
+         null,
+         false
+      ],
+      [
+         "TO",
+         [
+            4,
+            "880203e8"
+         ],
+         false
       ]
    ]
 }

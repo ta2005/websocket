@@ -8,7 +8,7 @@
    "createWirelog": true,
    "description": "Send close with valid close code 1010",
    "droppedByMe": false,
-   "duration": 3,
+   "duration": 4,
    "expectation": "Clean close with normal or echoed code",
    "expected": {
       "OK": []
@@ -39,7 +39,7 @@
    "rxOctetStats": {
       "187": 1
    },
-   "started": "2026-08-12T09:03:43.889Z",
+   "started": "2026-08-12T14:01:25.380Z",
    "trafficStats": null,
    "txFrameStats": {
       "8": 1

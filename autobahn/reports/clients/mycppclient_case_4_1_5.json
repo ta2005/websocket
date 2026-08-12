@@ -7,8 +7,8 @@
    "createStats": true,
    "createWirelog": true,
    "description": "Send small text message, then send frame with reserved non-control <b>Opcode = 7</b> and non-empty payload, then send Ping.",
-   "droppedByMe": false,
-   "duration": 7,
+   "droppedByMe": true,
+   "duration": 9,
    "expectation": "Echo for first message is received, but then connection is failed immediately, since reserved opcode frame is used. A Pong is not received.",
    "expected": {
       "NON-STRICT": [],
@@ -32,7 +32,7 @@
    "httpResponse": "HTTP/1.1 101 Switching Protocols\r\nServer: AutobahnTestSuite/25.10.1-0.10.9\r\nX-Powered-By: AutobahnPython/0.10.9\r\nUpgrade: WebSocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n",
    "id": "4.1.5",
    "isServer": true,
-   "localCloseCode": null,
+   "localCloseCode": 1000,
    "localCloseReason": null,
    "received": [
       [
@@ -41,33 +41,36 @@
          false
       ]
    ],
-   "remoteCloseCode": null,
+   "remoteCloseCode": 1002,
    "remoteCloseReason": null,
    "reportCompressionRatio": false,
    "reportTime": false,
    "result": "Actual events match at least one expected.",
    "resultClose": "Connection was properly closed",
    "rxFrameStats": {
-      "1": 1
+      "1": 1,
+      "8": 1
    },
    "rxOctetStats": {
+      "8": 1,
       "19": 1,
       "186": 1
    },
-   "started": "2026-08-12T09:03:32.197Z",
+   "started": "2026-08-12T14:01:13.898Z",
    "trafficStats": null,
    "txFrameStats": {
       "1": 1,
       "7": 1,
+      "8": 1,
       "9": 1
    },
    "txOctetStats": {
-      "1": 20,
+      "1": 19,
       "208": 1
    },
-   "wasClean": false,
+   "wasClean": true,
    "wasCloseHandshakeTimeout": false,
-   "wasNotCleanReason": "peer dropped the TCP connection without previous WebSocket closing handshake",
+   "wasNotCleanReason": null,
    "wasOpenHandshakeTimeout": false,
    "wasServerConnectionDropTimeout": false,
    "wirelog": [
@@ -277,18 +280,10 @@
          true
       ],
       [
-         "TO",
-         [
-            1,
-            "65"
-         ],
-         true
-      ],
-      [
          "RO",
          [
             19,
-            "818d5358f2561b3d9e3a3c74d2213c2a9e3272"
+            "818d1b29c52f534ca9437405e558745ba94b3a"
          ]
       ],
       [
@@ -301,15 +296,48 @@
          true,
          0,
          true,
-         "5358f256"
+         "1b29c52f"
       ],
       [
          "TO",
          [
             1,
-            "6c"
+            "65"
          ],
          true
+      ],
+      [
+         "RO",
+         [
+            8,
+            "888247f6a0e3441c"
+         ]
+      ],
+      [
+         "RF",
+         [
+            2,
+            "0x03ea"
+         ],
+         8,
+         true,
+         0,
+         true,
+         "47f6a0e3"
+      ],
+      [
+         "TF",
+         [
+            2,
+            "0x03e8"
+         ],
+         8,
+         true,
+         0,
+         null,
+         null,
+         null,
+         false
       ]
    ]
 }

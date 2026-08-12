@@ -8,7 +8,7 @@
    "createWirelog": true,
    "description": "Send 256K message followed by close then a ping",
    "droppedByMe": false,
-   "duration": 83,
+   "duration": 57,
    "expectation": "Case outcome depends on implementation defined close behavior. Message and close frame are sent back to back. If the close frame is processed before the text message write is complete (as can happen in asynchronous processing models) the close frame is processed first and the text message may not be received or may only be partially received.",
    "expected": {
       "NON-STRICT": [],
@@ -65,7 +65,7 @@
       "49200": 1,
       "65536": 2
    },
-   "started": "2026-08-12T09:03:43.732Z",
+   "started": "2026-08-12T14:01:25.253Z",
    "trafficStats": null,
    "txFrameStats": {
       "1": 2,
@@ -196,7 +196,7 @@
          "RO",
          [
             8200,
-            "01fe2000c5457afb8704099ff2631093f77638bab6214dddaf2d48c88704099ff2631093f77638bab6214dddaf2d48c88704099ff2631093f77638bab6214ddd ..."
+            "01fe2000eeb5a66bacf4d50fd993cc03dc86e42a9dd1914d84dd9458acf4d50fd993cc03dc86e42a9dd1914d84dd9458acf4d50fd993cc03dc86e42a9dd1914d ..."
          ]
       ],
       [
@@ -209,13 +209,13 @@
          false,
          0,
          true,
-         "c5457afb"
+         "eeb5a66b"
       ],
       [
          "RO",
          [
             32800,
-            "00fe20002a00f3fa5964c4dc4068c1c96841809e1d2699921833b1bb5964c4dc4068c1c96841809e1d2699921833b1bb5964c4dc4068c1c96841809e1d269992 ..."
+            "00fe2000b4d3eb35c7b7dc13debbd906f692985183f5815d86e0a974c7b7dc13debbd906f692985183f5815d86e0a974c7b7dc13debbd906f692985183f5815d ..."
          ]
       ],
       [
@@ -228,7 +228,7 @@
          false,
          0,
          true,
-         "2a00f3fa"
+         "b4d3eb35"
       ],
       [
          "RF",
@@ -240,7 +240,7 @@
          false,
          0,
          true,
-         "0fd26904"
+         "0843fe4d"
       ],
       [
          "RF",
@@ -252,7 +252,7 @@
          false,
          0,
          true,
-         "eb885a39"
+         "11688775"
       ],
       [
          "RF",
@@ -264,13 +264,13 @@
          false,
          0,
          true,
-         "ff330cdf"
+         "4c20b00a"
       ],
       [
          "RO",
          [
             49200,
-            "00fe2000f9afbb1fbbeec87bce89d177cb9cf95e8acb8c3993c7892cbbeec87bce89d177cb9cf95e8acb8c3993c7892cbbeec87bce89d177cb9cf95e8acb8c39 ..."
+            "00fe200035372f2777765c430211454f07046d66465318015f5f1d1477765c430211454f07046d66465318015f5f1d1477765c430211454f07046d6646531801 ..."
          ]
       ],
       [
@@ -283,7 +283,7 @@
          false,
          0,
          true,
-         "f9afbb1f"
+         "35372f27"
       ],
       [
          "RF",
@@ -295,7 +295,7 @@
          false,
          0,
          true,
-         "b69ad2ee"
+         "d5f001b5"
       ],
       [
          "RF",
@@ -307,7 +307,7 @@
          false,
          0,
          true,
-         "0ed6ad3f"
+         "ff48d15e"
       ],
       [
          "RF",
@@ -319,7 +319,7 @@
          false,
          0,
          true,
-         "c9f3729e"
+         "67a865a2"
       ],
       [
          "RF",
@@ -331,7 +331,7 @@
          false,
          0,
          true,
-         "692ff8c0"
+         "70316b98"
       ],
       [
          "RF",
@@ -343,13 +343,13 @@
          false,
          0,
          true,
-         "163d17ea"
+         "f3cb5977"
       ],
       [
          "RO",
          [
             8200,
-            "00fe200070c742a003a375861aaf7093328631c447e128c842f400e103a375861aaf7093328631c447e128c842f400e103a375861aaf7093328631c447e128c8 ..."
+            "00fe2000f6dc3c6e85b80b489cb40e5db49d4f0ac1fa5606c4ef7e2f85b80b489cb40e5db49d4f0ac1fa5606c4ef7e2f85b80b489cb40e5db49d4f0ac1fa5606 ..."
          ]
       ],
       [
@@ -362,13 +362,13 @@
          false,
          0,
          true,
-         "70c742a0"
+         "f6dc3c6e"
       ],
       [
          "RO",
          [
             65536,
-            "00fe2000fd6e9b68ca48f100cf5dd9298e0aac4e9706a95bbf2fe80cca48f100cf5dd9298e0aac4e9706a95bbf2fe80cca48f100cf5dd9298e0aac4e9706a95b ..."
+            "00fe2000147e67ca23580da2264d258b671a50ec7e1655f9563f14ae23580da2264d258b671a50ec7e1655f9563f14ae23580da2264d258b671a50ec7e1655f9 ..."
          ]
       ],
       [
@@ -381,7 +381,7 @@
          false,
          0,
          true,
-         "fd6e9b68"
+         "147e67ca"
       ],
       [
          "RF",
@@ -393,7 +393,7 @@
          false,
          0,
          true,
-         "668f6964"
+         "a7844d6e"
       ],
       [
          "RF",
@@ -405,7 +405,7 @@
          false,
          0,
          true,
-         "b410e3d3"
+         "c108c8a3"
       ],
       [
          "RF",
@@ -417,7 +417,7 @@
          false,
          0,
          true,
-         "39d0ec15"
+         "30626ec5"
       ],
       [
          "RF",
@@ -429,7 +429,7 @@
          false,
          0,
          true,
-         "0929ef28"
+         "f5eb6e36"
       ],
       [
          "RF",
@@ -441,7 +441,7 @@
          false,
          0,
          true,
-         "78f21c66"
+         "bc87803d"
       ],
       [
          "RF",
@@ -453,13 +453,13 @@
          false,
          0,
          true,
-         "0181f729"
+         "715e819d"
       ],
       [
          "RO",
          [
             64,
-            "eb4c690ac365285db6023151b3171978f2406c1feb4c690ac365285db6023151b3171978f2406c1feb4c690ac365285db6023151b3171978f2406c1feb4c690a ..."
+            "955cc515bd758442c8129d4ecd07b5678c50c000955cc515bd758442c8129d4ecd07b5678c50c000955cc515bd758442c8129d4ecd07b5678c50c000955cc515 ..."
          ]
       ],
       [
@@ -472,13 +472,13 @@
          false,
          0,
          true,
-         "81245b39"
+         "ff34f726"
       ],
       [
          "RO",
          [
             65536,
-            "00fe20001ae8633a58a9105e2dce095228db217b698c541c7080510958a9105e2dce095228db217b698c541c7080510958a9105e2dce095228db217b698c541c ..."
+            "00fe200053cdd824118cab4064ebb24c61fe9a6520a9ef0239a5ea17118cab4064ebb24c61fe9a6520a9ef0239a5ea17118cab4064ebb24c61fe9a6520a9ef02 ..."
          ]
       ],
       [
@@ -491,7 +491,7 @@
          false,
          0,
          true,
-         "1ae8633a"
+         "53cdd824"
       ],
       [
          "RF",
@@ -503,7 +503,7 @@
          false,
          0,
          true,
-         "68f5b181"
+         "21b4ed5f"
       ],
       [
          "RF",
@@ -515,7 +515,7 @@
          false,
          0,
          true,
-         "fe293e45"
+         "ec067e56"
       ],
       [
          "RF",
@@ -527,7 +527,7 @@
          false,
          0,
          true,
-         "33ed1566"
+         "d5fdcee2"
       ],
       [
          "RF",
@@ -539,7 +539,7 @@
          false,
          0,
          true,
-         "86df17c1"
+         "981b45cd"
       ],
       [
          "RF",
@@ -551,7 +551,7 @@
          false,
          0,
          true,
-         "86e00483"
+         "0d29e3ff"
       ],
       [
          "RF",
@@ -563,13 +563,13 @@
          false,
          0,
          true,
-         "290b7766"
+         "2517c505"
       ],
       [
          "RO",
          [
             32882,
-            "557e305a4c72354f645b7418113c6d141429453d557e305a4c72354f645b7418113c6d141429453d557e305a4c72354f645b7418113c6d141429453d557e305a ..."
+            "78eb9ce361e799f649ced8a13ca9c1ad39bce98478eb9ce361e799f649ced8a13ca9c1ad39bce98478eb9ce361e799f649ced8a13ca9c1ad39bce98478eb9ce3 ..."
          ]
       ],
       [
@@ -582,7 +582,7 @@
          false,
          0,
          true,
-         "261a077c"
+         "0b8fabc5"
       ],
       [
          "RF",
@@ -594,7 +594,7 @@
          false,
          0,
          true,
-         "9cc8fd95"
+         "074ab59d"
       ],
       [
          "RF",
@@ -606,7 +606,7 @@
          false,
          0,
          true,
-         "9b9b4b50"
+         "29a7ae1f"
       ],
       [
          "RF",
@@ -618,7 +618,7 @@
          false,
          0,
          true,
-         "219051a5"
+         "cc8f4be8"
       ],
       [
          "RF",
@@ -630,7 +630,7 @@
          true,
          0,
          true,
-         "edc60bf8"
+         "9a8a8a0b"
       ],
       [
          "RF",
@@ -642,7 +642,7 @@
          true,
          0,
          true,
-         "e72a6e07"
+         "eb336774"
       ]
    ]
 }

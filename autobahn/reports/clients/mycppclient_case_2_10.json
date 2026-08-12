@@ -8,7 +8,7 @@
    "createWirelog": true,
    "description": "Send 10 Pings with payload.",
    "droppedByMe": false,
-   "duration": 56,
+   "duration": 59,
    "expectation": "Pongs for our Pings with all the payloads. Note: This is not required by the Spec .. but we check for this behaviour anyway. Clean close with normal code.",
    "expected": {
       "OK": [
@@ -124,7 +124,7 @@
       "135": 1,
       "186": 1
    },
-   "started": "2026-08-12T09:03:32.024Z",
+   "started": "2026-08-12T14:01:13.703Z",
    "trafficStats": null,
    "txFrameStats": {
       "8": 1,
@@ -384,7 +384,7 @@
          "RO",
          [
             15,
-            "8a89768b70ac06ea09c019ea148146"
+            "8a89b85104d4c8307db8d73060f988"
          ]
       ],
       [
@@ -397,13 +397,13 @@
          true,
          0,
          true,
-         "768b70ac"
+         "b85104d4"
       ],
       [
          "RO",
          [
             135,
-            "8a89773a2538075b5c54185b4115468a89e2c4572e92a52e428da53303d08a89618d63dc11ec1ab00eec07f1528a893f263e5d4f47473150475a700b8a89f074 ..."
+            "8a894e694f823e0836ee21082baf7f8a8966dc02ce16bd7ba209bd66e3548a8956a70bd626c672ba39c66ffb658a89f47a93b6841beada9b1bf79bc08a896608 ..."
          ]
       ],
       [
@@ -416,7 +416,7 @@
          true,
          0,
          true,
-         "773a2538"
+         "4e694f82"
       ],
       [
          "RF",
@@ -428,7 +428,7 @@
          true,
          0,
          true,
-         "e2c4572e"
+         "66dc02ce"
       ],
       [
          "RF",
@@ -440,7 +440,7 @@
          true,
          0,
          true,
-         "618d63dc"
+         "56a70bd6"
       ],
       [
          "RF",
@@ -452,7 +452,7 @@
          true,
          0,
          true,
-         "3f263e5d"
+         "f47a93b6"
       ],
       [
          "RF",
@@ -464,7 +464,7 @@
          true,
          0,
          true,
-         "f0745e62"
+         "66084156"
       ],
       [
          "RF",
@@ -476,7 +476,7 @@
          true,
          0,
          true,
-         "4fa3417f"
+         "a7da9787"
       ],
       [
          "RF",
@@ -488,7 +488,7 @@
          true,
          0,
          true,
-         "9308be63"
+         "02078807"
       ],
       [
          "RF",
@@ -500,7 +500,7 @@
          true,
          0,
          true,
-         "ec9e51b2"
+         "9ec2d6aa"
       ],
       [
          "RF",
@@ -512,7 +512,7 @@
          true,
          0,
          true,
-         "277d00d7"
+         "51ef54fa"
       ],
       [
          "TF",

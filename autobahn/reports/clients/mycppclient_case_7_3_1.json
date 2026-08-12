@@ -8,7 +8,7 @@
    "createWirelog": true,
    "description": "Send a close frame with payload length 0 (no close code, no close reason)",
    "droppedByMe": false,
-   "duration": 3,
+   "duration": 2,
    "expectation": "Clean close with normal code.",
    "expected": {
       "OK": []
@@ -38,7 +38,7 @@
    "rxOctetStats": {
       "187": 1
    },
-   "started": "2026-08-12T09:03:43.818Z",
+   "started": "2026-08-12T14:01:25.312Z",
    "trafficStats": null,
    "txFrameStats": {
       "8": 1

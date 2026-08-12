@@ -2,9 +2,11 @@
 #include "client.hpp"
 #include "details/mask_payload.hpp"
 #include "details/prepare_meta.hpp"
+#include "error.hpp"
 #include "handshake.hpp"
 #include "logger.hpp"
 #include "simdutf.h"
+#include <arpa/inet.h>
 
 namespace ws {
 
@@ -97,15 +99,10 @@ Client::send_close(std::span<const uint8_t> payload) {
 }
 
 std::expected<void, Error> Client::close(std::span<const uint8_t> payload) {
-    if (m_state == ConnectionState::Open) {
-        m_state = ConnectionState::Closing;
-    } else if (m_state == ConnectionState::Closing) {
-        m_state = ConnectionState::Closed;
-        m_socket.close();
-        return {};
-    } else {
+    if (m_state != ConnectionState::Open) {
         return std::unexpected(Error::InvalidState);
     }
+    m_state = ConnectionState::Closing;
     return send_close(payload);
 }
 
@@ -114,6 +111,16 @@ std::expected<void, Error> Client::close(std::span<const uint8_t> payload) {
 // and payload
 std::expected<void, Error> Client::send_ping(std::span<const uint8_t> payload) {
     return send_control_frame(payload, opcode::ping);
+}
+
+void Client::fail_connection(status_code reason) {
+    auto st = htons(static_cast<uint16_t>(reason));
+    if (auto send_res = send_close({reinterpret_cast<const uint8_t *>(&st), 2});
+        !send_res) {
+        ws::log::debug("unabe to send a close frame");
+    }
+    m_socket.close();
+    m_state = ConnectionState::Closed;
 }
 
 std::expected<void, Error> Client::send_pong(std::span<const uint8_t> payload) {
@@ -173,8 +180,9 @@ std::expected<ChunkView, Error> Client::read_chunk_impl(size_t first_read) {
         read_header(first_read).and_then([this](const auto &meta) {
             return this->read_payload(meta);
         });
-    if(!parsed_meta){
-	return std::unexpected(parsed_meta.error());
+    if (!parsed_meta) {
+        fail_connection(get_status_code(parsed_meta.error()));
+        return std::unexpected(parsed_meta.error());
     }
     if (m_state == ConnectionState::Closing && !is_control(parsed_meta->op)) {
         return read_chunk();
@@ -183,6 +191,7 @@ std::expected<ChunkView, Error> Client::read_chunk_impl(size_t first_read) {
         case opcode::ping: {
             if (auto pong_res = send_pong({buffer.data(), parsed_meta->len});
                 !pong_res) {
+                fail_connection(get_status_code(pong_res.error()));
                 return std::unexpected(pong_res.error());
             }
             return read_chunk();
@@ -191,10 +200,19 @@ std::expected<ChunkView, Error> Client::read_chunk_impl(size_t first_read) {
             return read_chunk();
         } break;
         case opcode::close: {
-            if (auto close_res =
-                    close(std::span{buffer.data(), parsed_meta->len});
-                !close_res) {
-                return std::unexpected(close_res.error());
+            if (m_state == ConnectionState::Open) {
+
+                if (auto close_res =
+                        close(std::span{buffer.data(), parsed_meta->len});
+                    !close_res) {
+                    fail_connection(get_status_code(close_res.error()));
+                    return std::unexpected(close_res.error());
+                }
+                m_state = ConnectionState::Closed;
+                m_socket.close();
+            } else if (m_state == ConnectionState::Closing) {
+                m_state = ConnectionState::Closed;
+                m_socket.close();
             }
         } break;
         default:;
@@ -268,6 +286,7 @@ std::expected<Message, Error> Client::read_message(size_t max_size) {
         if (!simdutf::validate_utf8(
                 reinterpret_cast<const char *>(msg.payload.data()),
                 msg.payload.size())) {
+            fail_connection(get_status_code(Error::InvalidUTF8));
             return std::unexpected(Error::InvalidUTF8);
         }
     }

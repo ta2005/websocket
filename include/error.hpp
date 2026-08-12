@@ -1,6 +1,7 @@
 #ifndef WS_ERROR_HPP
 #define WS_ERROR_HPP
 
+#include "status_code.hpp"
 #include <string_view>
 
 namespace ws {
@@ -39,6 +40,40 @@ enum class Error {
     ProtocolError,          // Generic protocol violation
     InvalidState,
 };
+
+constexpr status_code get_status_code(Error e) {
+    switch (e) {
+        case Error::InvalidUTF8:
+            return status_code::bad_payload; // 1007
+        case Error::MessageTooLarge:
+            return status_code::payload_too_big; // 1009
+        case Error::UnsupportedExtension:
+            return status_code::needs_extention; // 1010
+        case Error::ConnectionClosed:
+            return status_code::normal_closure; // 1000
+        case Error::ConnectionFailed:
+        case Error::ReadFailed:
+        case Error::WriteFailed:
+            return status_code::abnormal; // 1006
+        case Error::InvalidHttpVersion:
+        case Error::InvalidStatusCode:
+        case Error::HandshakeRejected:
+        case Error::MissingHeaders:
+        case Error::DeduplicateHeaders:
+        case Error::FoundNoNewLine:
+        case Error::InvalidToken:
+        case Error::ParseError:
+        case Error::NonFinControlFrame:
+        case Error::UnsupporOpcode:
+        case Error::InvalidPayloadLength:
+        case Error::ControlFrameTooLarge:
+        case Error::ControlFrameFragmented:
+        case Error::UnmaskedServerPayload:
+        case Error::ProtocolError:
+        default:
+            return status_code::protocol_error; // 1002
+    }
+}
 
 // check if i must Fail the Websocket connection after error
 constexpr bool is_fatal(Error e) {

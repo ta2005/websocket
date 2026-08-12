@@ -8,7 +8,7 @@
    "createWirelog": true,
    "description": "Send text Message fragmented into 2 fragments, then Continuation Frame with FIN = false where there is nothing to continue, then unfragmented Text Message, all sent in one chop.",
    "droppedByMe": false,
-   "duration": 12,
+   "duration": 21,
    "expectation": "The connection is failed immediately, since there is no message to continue.",
    "expected": {
       "NON-STRICT": [],
@@ -54,7 +54,7 @@
       "24": 1,
       "186": 1
    },
-   "started": "2026-08-12T09:03:32.540Z",
+   "started": "2026-08-12T14:01:14.205Z",
    "trafficStats": null,
    "txFrameStats": {
       "0": 2,
@@ -181,7 +181,7 @@
          "RO",
          [
             24,
-            "8192a7d558bdc1a739dacab036c996b32adcc0b83dd3d3e7"
+            "8192416c1a03271e7b642c097477700a686226017f6d355e"
          ]
       ],
       [
@@ -194,7 +194,7 @@
          true,
          0,
          true,
-         "a7d558bd"
+         "416c1a03"
       ]
    ]
 }

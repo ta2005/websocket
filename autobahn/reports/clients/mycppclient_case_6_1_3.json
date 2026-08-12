@@ -8,7 +8,7 @@
    "createWirelog": true,
    "description": "Send fragmented text message, 3 fragments, first and last of length 0, middle non-empty.",
    "droppedByMe": false,
-   "duration": 6,
+   "duration": 4,
    "expectation": "A message is echo'ed back to us (with payload = payload of middle fragment).",
    "expected": {
       "OK": [
@@ -53,7 +53,7 @@
       "26": 1,
       "186": 1
    },
-   "started": "2026-08-12T09:03:34.672Z",
+   "started": "2026-08-12T14:01:16.294Z",
    "trafficStats": null,
    "txFrameStats": {
       "0": 2,
@@ -161,7 +161,7 @@
          "RO",
          [
             26,
-            "81949f5dbfccf234dba8f3389faaed3cd2a9bf2ddeb5f332dea8"
+            "8194e14f38d48c265cb08d2a18b2932e55b1c13f59ad8d2059b0"
          ]
       ],
       [
@@ -174,7 +174,7 @@
          true,
          0,
          true,
-         "9f5dbfcc"
+         "e14f38d4"
       ],
       [
          "TF",

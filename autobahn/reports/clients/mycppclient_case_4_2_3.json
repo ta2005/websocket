@@ -7,8 +7,8 @@
    "createStats": true,
    "createWirelog": true,
    "description": "Send small text message, then send frame with reserved control <b>Opcode = 13</b>, then send Ping.",
-   "droppedByMe": false,
-   "duration": 4,
+   "droppedByMe": true,
+   "duration": 5,
    "expectation": "Echo for first message is received, but then connection is failed immediately, since reserved opcode frame is used. A Pong is not received.",
    "expected": {
       "NON-STRICT": [],
@@ -32,7 +32,7 @@
    "httpResponse": "HTTP/1.1 101 Switching Protocols\r\nServer: AutobahnTestSuite/25.10.1-0.10.9\r\nX-Powered-By: AutobahnPython/0.10.9\r\nUpgrade: WebSocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n",
    "id": "4.2.3",
    "isServer": true,
-   "localCloseCode": null,
+   "localCloseCode": 1000,
    "localCloseReason": null,
    "received": [
       [
@@ -41,34 +41,38 @@
          false
       ]
    ],
-   "remoteCloseCode": null,
+   "remoteCloseCode": 1002,
    "remoteCloseReason": null,
    "reportCompressionRatio": false,
    "reportTime": false,
    "result": "Actual events match at least one expected.",
    "resultClose": "Connection was properly closed",
    "rxFrameStats": {
-      "1": 1
+      "1": 1,
+      "8": 1
    },
    "rxOctetStats": {
+      "8": 1,
       "19": 1,
       "186": 1
    },
-   "started": "2026-08-12T09:03:32.220Z",
+   "started": "2026-08-12T14:01:13.924Z",
    "trafficStats": null,
    "txFrameStats": {
       "1": 1,
+      "8": 1,
       "9": 1,
       "13": 1
    },
    "txOctetStats": {
       "2": 2,
+      "4": 1,
       "15": 1,
       "208": 1
    },
-   "wasClean": false,
+   "wasClean": true,
    "wasCloseHandshakeTimeout": false,
-   "wasNotCleanReason": "peer dropped the TCP connection without previous WebSocket closing handshake",
+   "wasNotCleanReason": null,
    "wasOpenHandshakeTimeout": false,
    "wasServerConnectionDropTimeout": false,
    "wirelog": [
@@ -161,7 +165,7 @@
          "RO",
          [
             19,
-            "818def1505cca77069a0803925bb806769a8ce"
+            "818dc781e8ee8fe48482a8adc899a8f3848ae6"
          ]
       ],
       [
@@ -174,7 +178,48 @@
          true,
          0,
          true,
-         "ef1505cc"
+         "c781e8ee"
+      ],
+      [
+         "RO",
+         [
+            8,
+            "8882b0d6ce52b33c"
+         ]
+      ],
+      [
+         "RF",
+         [
+            2,
+            "0x03ea"
+         ],
+         8,
+         true,
+         0,
+         true,
+         "b0d6ce52"
+      ],
+      [
+         "TF",
+         [
+            2,
+            "0x03e8"
+         ],
+         8,
+         true,
+         0,
+         null,
+         null,
+         null,
+         false
+      ],
+      [
+         "TO",
+         [
+            4,
+            "880203e8"
+         ],
+         false
       ]
    ]
 }

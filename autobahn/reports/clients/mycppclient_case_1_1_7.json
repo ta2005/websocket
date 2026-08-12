@@ -8,7 +8,7 @@
    "createWirelog": true,
    "description": "Send text message message with payload of length 65536.",
    "droppedByMe": false,
-   "duration": 69,
+   "duration": 58,
    "expectation": "Receive echo'ed text message (with payload as sent). Clean close with normal code.",
    "expected": {
       "OK": [
@@ -56,7 +56,7 @@
       "24600": 1,
       "32800": 1
    },
-   "started": "2026-08-12T09:03:31.323Z",
+   "started": "2026-08-12T14:01:13.199Z",
    "trafficStats": null,
    "txFrameStats": {
       "1": 1,
@@ -118,7 +118,7 @@
          "RO",
          [
             8200,
-            "01fe20004380b2b469aa989e69aa989e69aa989e69aa989e69aa989e69aa989e69aa989e69aa989e69aa989e69aa989e69aa989e69aa989e69aa989e69aa989e ..."
+            "01fe2000783763b0521d499a521d499a521d499a521d499a521d499a521d499a521d499a521d499a521d499a521d499a521d499a521d499a521d499a521d499a ..."
          ]
       ],
       [
@@ -131,13 +131,13 @@
          false,
          0,
          true,
-         "4380b2b4"
+         "783763b0"
       ],
       [
          "RO",
          [
             32800,
-            "00fe20001e220293340828b9340828b9340828b9340828b9340828b9340828b9340828b9340828b9340828b9340828b9340828b9340828b9340828b9340828b9 ..."
+            "00fe20005d27a7bd770d8d97770d8d97770d8d97770d8d97770d8d97770d8d97770d8d97770d8d97770d8d97770d8d97770d8d97770d8d97770d8d97770d8d97 ..."
          ]
       ],
       [
@@ -150,7 +150,7 @@
          false,
          0,
          true,
-         "1e220293"
+         "5d27a7bd"
       ],
       [
          "RF",
@@ -162,7 +162,7 @@
          false,
          0,
          true,
-         "d0693345"
+         "6fd12b7e"
       ],
       [
          "RF",
@@ -174,7 +174,7 @@
          false,
          0,
          true,
-         "abd54776"
+         "03786ace"
       ],
       [
          "RF",
@@ -186,13 +186,13 @@
          false,
          0,
          true,
-         "d65c4397"
+         "9c5b5287"
       ],
       [
          "RO",
          [
             24600,
-            "00fe20007ae5ad8f50cf87a550cf87a550cf87a550cf87a550cf87a550cf87a550cf87a550cf87a550cf87a550cf87a550cf87a550cf87a550cf87a550cf87a5 ..."
+            "00fe2000522649b4780c639e780c639e780c639e780c639e780c639e780c639e780c639e780c639e780c639e780c639e780c639e780c639e780c639e780c639e ..."
          ]
       ],
       [
@@ -205,7 +205,7 @@
          false,
          0,
          true,
-         "7ae5ad8f"
+         "522649b4"
       ],
       [
          "RF",
@@ -217,7 +217,7 @@
          false,
          0,
          true,
-         "9b61a8a9"
+         "165186a5"
       ],
       [
          "RF",
@@ -229,7 +229,7 @@
          true,
          0,
          true,
-         "57b6aec3"
+         "f69bbd82"
       ],
       [
          "TF",

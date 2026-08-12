@@ -8,7 +8,7 @@
    "createWirelog": true,
    "description": "Send fragmented text message, 3 fragments each of length 0.",
    "droppedByMe": false,
-   "duration": 8,
+   "duration": 7,
    "expectation": "A message is echo'ed back to us (with empty payload).",
    "expected": {
       "OK": [
@@ -53,7 +53,7 @@
       "6": 1,
       "186": 1
    },
-   "started": "2026-08-12T09:03:34.662Z",
+   "started": "2026-08-12T14:01:16.283Z",
    "trafficStats": null,
    "txFrameStats": {
       "0": 2,
@@ -160,7 +160,7 @@
          "RO",
          [
             6,
-            "8180a38ea0de"
+            "818011310c4c"
          ]
       ],
       [
@@ -173,7 +173,7 @@
          true,
          0,
          true,
-         "a38ea0de"
+         "11310c4c"
       ],
       [
          "TF",

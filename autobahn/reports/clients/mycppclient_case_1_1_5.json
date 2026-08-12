@@ -8,7 +8,7 @@
    "createWirelog": true,
    "description": "Send text message message with payload of length 128.",
    "droppedByMe": false,
-   "duration": 5,
+   "duration": 6,
    "expectation": "Receive echo'ed text message (with payload as sent). Clean close with normal code.",
    "expected": {
       "OK": [
@@ -53,7 +53,7 @@
       "136": 1,
       "185": 1
    },
-   "started": "2026-08-12T09:03:31.252Z",
+   "started": "2026-08-12T14:01:13.129Z",
    "trafficStats": null,
    "txFrameStats": {
       "1": 1,
@@ -115,7 +115,7 @@
          "RO",
          [
             136,
-            "81fe0080744458415e6e726b5e6e726b5e6e726b5e6e726b5e6e726b5e6e726b5e6e726b5e6e726b5e6e726b5e6e726b5e6e726b5e6e726b5e6e726b5e6e726b ..."
+            "81fe0080b165a8eb9b4f82c19b4f82c19b4f82c19b4f82c19b4f82c19b4f82c19b4f82c19b4f82c19b4f82c19b4f82c19b4f82c19b4f82c19b4f82c19b4f82c1 ..."
          ]
       ],
       [
@@ -128,7 +128,7 @@
          true,
          0,
          true,
-         "74445841"
+         "b165a8eb"
       ],
       [
          "TF",

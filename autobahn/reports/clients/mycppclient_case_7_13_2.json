@@ -8,7 +8,7 @@
    "createWirelog": true,
    "description": "Send close with close code 65535",
    "droppedByMe": false,
-   "duration": 2,
+   "duration": 3,
    "expectation": "Actual events are undefined by the spec.",
    "expected": {
       "OK": []
@@ -40,7 +40,7 @@
    "rxOctetStats": {
       "187": 1
    },
-   "started": "2026-08-12T09:03:43.966Z",
+   "started": "2026-08-12T14:01:25.465Z",
    "trafficStats": null,
    "txFrameStats": {
       "8": 1

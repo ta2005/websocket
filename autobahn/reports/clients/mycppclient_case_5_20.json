@@ -8,7 +8,7 @@
    "createWirelog": true,
    "description": "Same as Case 5.19, but send all frames with SYNC = True.\n   Note, this does not change the octets sent in any way, only how the stream\n   is chopped up on the wire.",
    "droppedByMe": false,
-   "duration": 1029,
+   "duration": 1006,
    "expectation": "Same as Case 5.19. Implementations must be agnostic to how\n   octet stream is chopped up on wire (must be TCP clean).",
    "expected": {
       "OK": [
@@ -71,7 +71,7 @@
       "51": 1,
       "186": 1
    },
-   "started": "2026-08-12T09:03:33.602Z",
+   "started": "2026-08-12T14:01:15.266Z",
    "trafficStats": null,
    "txFrameStats": {
       "0": 4,
@@ -180,7 +180,7 @@
          "RO",
          [
             15,
-            "8a893ec057e74eaf398053a577d61f"
+            "8a8954137101247c1f663976513075"
          ]
       ],
       [
@@ -193,7 +193,7 @@
          true,
          0,
          true,
-         "3ec057e7"
+         "54137101"
       ],
       [
          "CTE",
@@ -295,7 +295,7 @@
          "RO",
          [
             15,
-            "8a89e10985919166ebf68c6ca5a3c0"
+            "8a8904e5e0fb748a8e9c6980c0c925"
          ]
       ],
       [
@@ -308,13 +308,13 @@
          true,
          0,
          true,
-         "e1098591"
+         "04e5e0fb"
       ],
       [
          "RO",
          [
             51,
-            "81ad455fc783232da6e4283aa9f77439b5e22232a2ed316da1f12438aae62b2bf4e5373ea0ee2031b3b7232da6e4283aa9f770"
+            "81ade54e77d8833c16bf882b19acd42805b9822312b6917c11aa84291abd8b3a44be972f10b5802003ec833c16bf882b19acd0"
          ]
       ],
       [
@@ -327,7 +327,7 @@
          true,
          0,
          true,
-         "455fc783"
+         "e54e77d8"
       ],
       [
          "TF",
