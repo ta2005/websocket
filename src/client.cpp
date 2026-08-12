@@ -1,7 +1,6 @@
 
 #include "client.hpp"
 #include "details/mask_payload.hpp"
-#include "details/parse_meta.hpp"
 #include "details/prepare_meta.hpp"
 #include "handshake.hpp"
 #include "logger.hpp"
@@ -43,8 +42,7 @@ std::expected<void, Error> Client::send_impl(std::span<const uint8_t> msg,
     if (m_state != ConnectionState::Open) {
         return std::unexpected(Error::InvalidState);
     }
-    constexpr int                   chunk_size = 8 * 1024;
-    bool                            first      = true;
+    bool                            first = true;
     std::array<uint8_t, chunk_size> tmp;
 
     while (msg.size() > chunk_size) {
@@ -122,10 +120,10 @@ std::expected<void, Error> Client::send_pong(std::span<const uint8_t> payload) {
     return send_control_frame(payload, opcode::pong);
 }
 
-std::expected<ChunkView, Error> Client::read_chunk_impl(size_t first_read) {
-    constexpr int chunk_size  = 8 * 1024;
-    auto         &buffer      = current_read.data;
-    auto          parsed_meta = detail::parse_meta({buffer.data(), first_read});
+std::expected<detail::PayloadMetaData, Error>
+Client::read_header(size_t first_read) {
+    auto &buffer      = current_read.data;
+    auto  parsed_meta = detail::parse_meta({buffer.data(), first_read});
     while (!parsed_meta) {
         if (parsed_meta.error() == Error::PayloadTooShort) {
             std::array<uint8_t, chunk_size> tmp;
@@ -136,21 +134,9 @@ std::expected<ChunkView, Error> Client::read_chunk_impl(size_t first_read) {
             buffer.insert(buffer.end(), tmp.begin(), tmp.begin() + *read_size);
             parsed_meta = detail::parse_meta({buffer.data(), buffer.size()});
         } else {
-            ws::log::error("[READ ERROR] Failed to parse frame metadata: {}",
-                           to_string(parsed_meta.error()));
             return std::unexpected(parsed_meta.error());
         }
     }
-    // 1. Log Parsed Metadata
-    ws::log::debug("=== [FRAME HEADER RECEIVED] ===");
-    ws::log::debug("  Opcode:    0x{:01X} ({})",
-                   static_cast<uint8_t>(parsed_meta->op),
-                   static_cast<int>(parsed_meta->op));
-    ws::log::debug("  FIN Bit:   {}", parsed_meta->fin);
-    ws::log::debug("  Masked:    {}", parsed_meta->is_masked);
-    ws::log::debug("  Payload L: {} bytes", parsed_meta->len);
-    ws::log::debug("  Header Size: {} bytes", parsed_meta->meta_size);
-    // TODO:this will then be converted into a validate function
     if (parsed_meta->is_masked) {
         return std::unexpected(Error::UnmaskedServerPayload);
     }
@@ -161,8 +147,14 @@ std::expected<ChunkView, Error> Client::read_chunk_impl(size_t first_read) {
         return std::unexpected(Error::InvalidPayloadLength);
     }
     buffer.erase(buffer.begin(), buffer.begin() + parsed_meta->meta_size);
+    return *parsed_meta;
+}
+
+std::expected<detail::PayloadMetaData, Error>
+Client::read_payload(detail::PayloadMetaData meta) {
+    auto  &buffer     = current_read.data;
     size_t total_read = buffer.size();
-    while (total_read < parsed_meta->len) {
+    while (total_read < meta.len) {
         std::array<uint8_t, chunk_size> tmp;
         auto read_size = m_socket.read({tmp.data(), tmp.size()});
         if (!read_size) {
@@ -171,23 +163,21 @@ std::expected<ChunkView, Error> Client::read_chunk_impl(size_t first_read) {
         buffer.insert(buffer.end(), tmp.begin(), tmp.begin() + *read_size);
         total_read += *read_size;
     }
-    current_read.remaing_bytes = parsed_meta->len;
-    // 2. Log Received Data Payload
-    std::string_view payload_view(reinterpret_cast<const char *>(buffer.data()),
-                                  parsed_meta->len);
+    current_read.remaing_bytes = meta.len;
+    return meta;
+}
 
-    if (m_state == ConnectionState::Closing && !is_control(parsed_meta->op)) {
-        ws::log::debug("Dropping non-control frame received in CLOSING state");
-        return read_chunk();
+std::expected<ChunkView, Error> Client::read_chunk_impl(size_t first_read) {
+    auto &buffer = current_read.data;
+    auto  parsed_meta =
+        read_header(first_read).and_then([this](const auto &meta) {
+            return this->read_payload(meta);
+        });
+    if(!parsed_meta){
+	return std::unexpected(parsed_meta.error());
     }
-
-    ws::log::debug("=== [FRAME PAYLOAD READ] ===");
-    if (parsed_meta->op == opcode::text) {
-        ws::log::debug("  Text Payload ({}) bytes: \"{}\"", parsed_meta->len,
-                       payload_view);
-    } else {
-        ws::log::debug("  Binary/Control Payload ({}) bytes: '\"{}\"",
-                       parsed_meta->len, payload_view);
+    if (m_state == ConnectionState::Closing && !is_control(parsed_meta->op)) {
+        return read_chunk();
     }
     switch (parsed_meta->op) {
         case opcode::ping: {
@@ -218,8 +208,7 @@ std::expected<ChunkView, Error> Client::read_chunk_impl(size_t first_read) {
 std::expected<ChunkView, Error> Client::read_chunk() {
     // i need to add a function to parse the header
     // detail::parse_meta();
-    constexpr int chunk_size = 8 * 1024;
-    auto         &buffer     = current_read.data;
+    auto &buffer = current_read.data;
     if (current_read.remaing_bytes > 0 &&
         current_read.remaing_bytes <= buffer.size()) {
         buffer.erase(buffer.begin(),

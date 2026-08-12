@@ -3,11 +3,14 @@
 
 #include "opcode.hpp"
 #include "tcp_socket.hpp"
+#include "details/parse_meta.hpp"
 #include <random>
 #include <string_view>
 #include <vector>
 
 namespace ws {
+
+inline constexpr int chunk_size  = 8 * 1024;
 
 struct ChunkView {
     std::span<uint8_t> payload;
@@ -39,6 +42,8 @@ class Client {
     std::expected<void, Error>      send_control_frame(std::span<const uint8_t>,
                                                        opcode);
     std::expected<ChunkView, Error> read_chunk_impl(size_t);
+    std::expected<detail::PayloadMetaData, Error> read_header(size_t);
+    std::expected<detail::PayloadMetaData, Error> read_payload(detail::PayloadMetaData);
     std::expected<void, Error>      send_close(std::span<const uint8_t>);
 
   public:
