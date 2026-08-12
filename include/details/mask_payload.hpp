@@ -9,27 +9,14 @@ constexpr void mask_payload(std::span<uint8_t> payload, uint32_t mask) {
     // I have seen this pattern before
     // with stb printf when wirting data
     mask = htonl(mask);
-    switch (payload.size() % 4) {
-        case 1:
-            payload[0] ^= mask & 0xFF;
-            payload = payload.subspan(1);
-            break;
-        case 2:
-            payload[0] ^= mask & 0xFF;
-            payload[1] ^= (mask << 8) & 0xFF;
-            payload = payload.subspan(2);
-            break;
-        case 3:
-            payload[0] ^= mask & 0xFF;
-            payload[1] ^= (mask << 8) & 0xFF;
-            payload[2] ^= (mask << 16) & 0xFF;
-            payload = payload.subspan(3);
-            break;
-    }
-    auto tmp = std::span<uint32_t>(reinterpret_cast<uint32_t *>(payload.data()),
-                                   payload.size() / 4);
-    for (size_t i = 0; i < tmp.size(); i++) {
-        tmp[i] ^= mask;
+    union u32_conv {
+        int     a;
+        uint8_t b[4];
+    };
+    u32_conv c;
+    c.a = mask;
+    for (size_t i = 0; i < payload.size(); i++) {
+        payload[i] ^= c.b[i % 4];
     }
 }
 

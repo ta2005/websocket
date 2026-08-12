@@ -1,14 +1,14 @@
 {
    "agent": "MyCppClient",
-   "behavior": "FAILED",
-   "behaviorClose": "FAILED",
+   "behavior": "OK",
+   "behaviorClose": "UNCLEAN",
    "case": 247,
-   "closedByMe": false,
+   "closedByMe": true,
    "createStats": true,
    "createWirelog": true,
    "description": "Send text message with payload of length 65536 auto-fragmented with <b>autoFragmentSize = 1300</b>.",
    "droppedByMe": false,
-   "duration": 6,
+   "duration": 85,
    "expectation": "Receive echo'ed text message (with payload as sent and transmitted frame counts as expected). Clean close with normal code.",
    "expected": {
       "OK": [
@@ -31,7 +31,7 @@
    "httpResponse": "HTTP/1.1 101 Switching Protocols\r\nServer: AutobahnTestSuite/25.10.1-0.10.9\r\nX-Powered-By: AutobahnPython/0.10.9\r\nUpgrade: WebSocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n",
    "id": "10.1.1",
    "isServer": true,
-   "localCloseCode": null,
+   "localCloseCode": 1000,
    "localCloseReason": null,
    "received": [
       [
@@ -44,22 +44,27 @@
    "remoteCloseReason": null,
    "reportCompressionRatio": false,
    "reportTime": false,
-   "result": "Actual events differ from any expected.",
-   "resultClose": "The connection was failed by the wrong endpoint",
+   "result": "Actual events match at least one expected.",
+   "resultClose": "The spec requires the connection to be failed cleanly here",
    "rxFrameStats": {
+      "0": 7,
       "1": 1
    },
    "rxOctetStats": {
       "187": 1,
-      "1308": 1
+      "8200": 1,
+      "24600": 1,
+      "32800": 1
    },
-   "started": "2026-08-10T23:52:48.845Z",
+   "started": "2026-08-12T09:03:43.971Z",
    "trafficStats": null,
    "txFrameStats": {
       "0": 50,
-      "1": 1
+      "1": 1,
+      "8": 1
    },
    "txOctetStats": {
+      "4": 1,
       "208": 1,
       "540": 1,
       "1304": 50
@@ -1214,21 +1219,141 @@
       [
          "RO",
          [
-            1308,
-            "81fe05145d7ab69877509cb277509cb277509cb277509cb277509cb277509cb277509cb277509cb277509cb277509cb277509cb277509cb277509cb277509cb2 ..."
+            8200,
+            "01fe2000f6a54430dc8f6e1adc8f6e1adc8f6e1adc8f6e1adc8f6e1adc8f6e1adc8f6e1adc8f6e1adc8f6e1adc8f6e1adc8f6e1adc8f6e1adc8f6e1adc8f6e1a ..."
          ]
       ],
       [
          "RF",
          [
-            1300,
+            8192,
             "**************************************************************** ..."
          ],
          1,
+         false,
+         0,
+         true,
+         "f6a54430"
+      ],
+      [
+         "RO",
+         [
+            32800,
+            "00fe20008cb079eda69a53c7a69a53c7a69a53c7a69a53c7a69a53c7a69a53c7a69a53c7a69a53c7a69a53c7a69a53c7a69a53c7a69a53c7a69a53c7a69a53c7 ..."
+         ]
+      ],
+      [
+         "RF",
+         [
+            8192,
+            "**************************************************************** ..."
+         ],
+         0,
+         false,
+         0,
+         true,
+         "8cb079ed"
+      ],
+      [
+         "RF",
+         [
+            8192,
+            "**************************************************************** ..."
+         ],
+         0,
+         false,
+         0,
+         true,
+         "16310986"
+      ],
+      [
+         "RF",
+         [
+            8192,
+            "**************************************************************** ..."
+         ],
+         0,
+         false,
+         0,
+         true,
+         "f49a05b5"
+      ],
+      [
+         "RF",
+         [
+            8192,
+            "**************************************************************** ..."
+         ],
+         0,
+         false,
+         0,
+         true,
+         "3f9ed16f"
+      ],
+      [
+         "RO",
+         [
+            24600,
+            "00fe200044a575e96e8f5fc36e8f5fc36e8f5fc36e8f5fc36e8f5fc36e8f5fc36e8f5fc36e8f5fc36e8f5fc36e8f5fc36e8f5fc36e8f5fc36e8f5fc36e8f5fc3 ..."
+         ]
+      ],
+      [
+         "RF",
+         [
+            8192,
+            "**************************************************************** ..."
+         ],
+         0,
+         false,
+         0,
+         true,
+         "44a575e9"
+      ],
+      [
+         "RF",
+         [
+            8192,
+            "**************************************************************** ..."
+         ],
+         0,
+         false,
+         0,
+         true,
+         "beba828c"
+      ],
+      [
+         "RF",
+         [
+            8192,
+            "**************************************************************** ..."
+         ],
+         0,
          true,
          0,
          true,
-         "5d7ab698"
+         "e383a031"
+      ],
+      [
+         "TF",
+         [
+            2,
+            "0x03e8"
+         ],
+         8,
+         true,
+         0,
+         null,
+         null,
+         null,
+         false
+      ],
+      [
+         "TO",
+         [
+            4,
+            "880203e8"
+         ],
+         false
       ]
    ]
 }

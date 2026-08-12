@@ -1,14 +1,14 @@
 {
    "agent": "MyCppClient",
-   "behavior": "FAILED",
-   "behaviorClose": "OK",
+   "behavior": "OK",
+   "behaviorClose": "UNCLEAN",
    "case": 51,
    "closedByMe": true,
    "createStats": true,
    "createWirelog": true,
    "description": "Send text Message fragmented into 2 fragments, one ping with payload in-between. Octets are sent in frame-wise chops.",
-   "droppedByMe": true,
-   "duration": 1009,
+   "droppedByMe": false,
+   "duration": 60,
    "expectation": "A pong is received, then the message is echo'ed back to us.",
    "expected": {
       "OK": [
@@ -35,12 +35,16 @@
    "httpResponse": "HTTP/1.1 101 Switching Protocols\r\nServer: AutobahnTestSuite/25.10.1-0.10.9\r\nX-Powered-By: AutobahnPython/0.10.9\r\nUpgrade: WebSocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n",
    "id": "5.7",
    "isServer": true,
-   "localCloseCode": null,
+   "localCloseCode": 1000,
    "localCloseReason": null,
    "received": [
       [
+         "pong",
+         "ping payload"
+      ],
+      [
          "message",
-         "fragment1",
+         "fragment1fragment2",
          false
       ]
    ],
@@ -48,18 +52,18 @@
    "remoteCloseReason": null,
    "reportCompressionRatio": false,
    "reportTime": false,
-   "result": "Actual events differ from any expected.",
-   "resultClose": "Connection was properly closed",
+   "result": "Actual events match at least one expected.",
+   "resultClose": "The spec requires the connection to be failed cleanly here",
    "rxFrameStats": {
       "1": 1,
-      "8": 1
+      "10": 1
    },
    "rxOctetStats": {
-      "6": 1,
-      "15": 1,
+      "18": 1,
+      "24": 1,
       "186": 1
    },
-   "started": "2026-08-10T23:52:22.303Z",
+   "started": "2026-08-12T09:03:32.349Z",
    "trafficStats": null,
    "txFrameStats": {
       "0": 1,
@@ -68,14 +72,14 @@
       "9": 1
    },
    "txOctetStats": {
-      "2": 1,
+      "4": 1,
       "11": 2,
       "14": 1,
       "208": 1
    },
-   "wasClean": true,
+   "wasClean": false,
    "wasCloseHandshakeTimeout": false,
-   "wasNotCleanReason": null,
+   "wasNotCleanReason": "peer dropped the TCP connection without previous WebSocket closing handshake",
    "wasOpenHandshakeTimeout": false,
    "wasServerConnectionDropTimeout": false,
    "wirelog": [
@@ -167,30 +171,46 @@
       [
          "RO",
          [
-            15,
-            "8189ca270ba5ac556ac2a74265d1fb"
+            18,
+            "8a8c0cf9f9767c9097112c89980f60969812"
          ]
       ],
       [
          "RF",
          [
-            9,
-            "fragment1"
+            12,
+            "ping payload"
+         ],
+         10,
+         true,
+         0,
+         true,
+         "0cf9f976"
+      ],
+      [
+         "RO",
+         [
+            24,
+            "8192cd3140beab4321d9a0542ecafc5732dfaa5c25d0b903"
+         ]
+      ],
+      [
+         "RF",
+         [
+            18,
+            "fragment1fragment2"
          ],
          1,
          true,
          0,
          true,
-         "ca270ba5"
-      ],
-      [
-         "TIE"
+         "cd3140be"
       ],
       [
          "TF",
          [
-            0,
-            ""
+            2,
+            "0x03e8"
          ],
          8,
          true,
@@ -203,29 +223,10 @@
       [
          "TO",
          [
-            2,
-            "8800"
+            4,
+            "880203e8"
          ],
          false
-      ],
-      [
-         "RO",
-         [
-            6,
-            "88800b139652"
-         ]
-      ],
-      [
-         "RF",
-         [
-            0,
-            ""
-         ],
-         8,
-         true,
-         0,
-         true,
-         "0b139652"
       ]
    ]
 }

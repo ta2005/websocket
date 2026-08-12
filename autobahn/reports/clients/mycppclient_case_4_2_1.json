@@ -8,7 +8,7 @@
    "createWirelog": true,
    "description": "Send frame with reserved control <b>Opcode = 11</b>.",
    "droppedByMe": false,
-   "duration": 4,
+   "duration": 2,
    "expectation": "The connection is failed immediately.",
    "expected": {
       "OK": []
@@ -38,7 +38,7 @@
    "rxOctetStats": {
       "186": 1
    },
-   "started": "2026-08-10T23:52:17.163Z",
+   "started": "2026-08-12T09:03:32.206Z",
    "trafficStats": null,
    "txFrameStats": {
       "11": 1

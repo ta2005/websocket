@@ -24,3 +24,7 @@ with read that return a cosnt span to an internal buffer
 
 
 todo change the string_views into enums
+
+next :
+some refacting to the client send_impl and read_impl
+adding proper errro handling 

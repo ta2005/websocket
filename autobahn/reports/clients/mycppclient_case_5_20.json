@@ -1,14 +1,14 @@
 {
    "agent": "MyCppClient",
-   "behavior": "FAILED",
-   "behaviorClose": "OK",
+   "behavior": "OK",
+   "behaviorClose": "UNCLEAN",
    "case": 64,
    "closedByMe": true,
    "createStats": true,
    "createWirelog": true,
    "description": "Same as Case 5.19, but send all frames with SYNC = True.\n   Note, this does not change the octets sent in any way, only how the stream\n   is chopped up on the wire.",
-   "droppedByMe": true,
-   "duration": 2013,
+   "droppedByMe": false,
+   "duration": 1029,
    "expectation": "Same as Case 5.19. Implementations must be agnostic to how\n   octet stream is chopped up on wire (must be TCP clean).",
    "expected": {
       "OK": [
@@ -39,36 +39,39 @@
    "httpResponse": "HTTP/1.1 101 Switching Protocols\r\nServer: AutobahnTestSuite/25.10.1-0.10.9\r\nX-Powered-By: AutobahnPython/0.10.9\r\nUpgrade: WebSocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n",
    "id": "5.20",
    "isServer": true,
-   "localCloseCode": null,
+   "localCloseCode": 1000,
    "localCloseReason": null,
    "received": [
       [
-         "message",
-         "fragment1",
-         false
+         "pong",
+         "pongme 1!"
       ],
       [
          "pong",
-         "0xae2d6e6ab327203cff"
+         "pongme 2!"
+      ],
+      [
+         "message",
+         "fragment1fragment2fragment3fragment4fragment5",
+         false
       ]
    ],
    "remoteCloseCode": null,
    "remoteCloseReason": null,
    "reportCompressionRatio": false,
    "reportTime": false,
-   "result": "Actual events differ from any expected.",
-   "resultClose": "Connection was properly closed",
+   "result": "Actual events match at least one expected.",
+   "resultClose": "The spec requires the connection to be failed cleanly here",
    "rxFrameStats": {
       "1": 1,
-      "8": 1,
-      "10": 1
+      "10": 2
    },
    "rxOctetStats": {
-      "6": 1,
       "15": 2,
+      "51": 1,
       "186": 1
    },
-   "started": "2026-08-10T23:52:33.560Z",
+   "started": "2026-08-12T09:03:33.602Z",
    "trafficStats": null,
    "txFrameStats": {
       "0": 4,
@@ -77,13 +80,13 @@
       "9": 2
    },
    "txOctetStats": {
-      "2": 1,
+      "4": 1,
       "11": 7,
       "208": 1
    },
-   "wasClean": true,
+   "wasClean": false,
    "wasCloseHandshakeTimeout": false,
-   "wasNotCleanReason": null,
+   "wasNotCleanReason": "peer dropped the TCP connection without previous WebSocket closing handshake",
    "wasOpenHandshakeTimeout": false,
    "wasServerConnectionDropTimeout": false,
    "wirelog": [
@@ -177,39 +180,20 @@
          "RO",
          [
             15,
-            "818902e5ecf364978d946f80828733"
+            "8a893ec057e74eaf398053a577d61f"
          ]
       ],
       [
          "RF",
          [
             9,
-            "fragment1"
-         ],
-         1,
-         true,
-         0,
-         true,
-         "02e5ecf3"
-      ],
-      [
-         "RO",
-         [
-            15,
-            "8a89de42000d706f6e676d65203121"
-         ]
-      ],
-      [
-         "RF",
-         [
-            9,
-            "0xae2d6e6ab327203cff"
+            "pongme 1!"
          ],
          10,
          true,
          0,
          true,
-         "de42000d"
+         "3ec057e7"
       ],
       [
          "CTE",
@@ -308,13 +292,48 @@
          true
       ],
       [
-         "TIE"
+         "RO",
+         [
+            15,
+            "8a89e10985919166ebf68c6ca5a3c0"
+         ]
+      ],
+      [
+         "RF",
+         [
+            9,
+            "pongme 2!"
+         ],
+         10,
+         true,
+         0,
+         true,
+         "e1098591"
+      ],
+      [
+         "RO",
+         [
+            51,
+            "81ad455fc783232da6e4283aa9f77439b5e22232a2ed316da1f12438aae62b2bf4e5373ea0ee2031b3b7232da6e4283aa9f770"
+         ]
+      ],
+      [
+         "RF",
+         [
+            45,
+            "fragment1fragment2fragment3fragment4fragment5"
+         ],
+         1,
+         true,
+         0,
+         true,
+         "455fc783"
       ],
       [
          "TF",
          [
-            0,
-            ""
+            2,
+            "0x03e8"
          ],
          8,
          true,
@@ -327,29 +346,10 @@
       [
          "TO",
          [
-            2,
-            "8800"
+            4,
+            "880203e8"
          ],
          false
-      ],
-      [
-         "RO",
-         [
-            6,
-            "8880d47308ae"
-         ]
-      ],
-      [
-         "RF",
-         [
-            0,
-            ""
-         ],
-         8,
-         true,
-         0,
-         true,
-         "d47308ae"
       ]
    ]
 }

@@ -1,14 +1,14 @@
 {
    "agent": "MyCppClient",
-   "behavior": "FAILED",
-   "behaviorClose": "OK",
+   "behavior": "OK",
+   "behaviorClose": "UNCLEAN",
    "case": 19,
    "closedByMe": true,
    "createStats": true,
    "createWirelog": true,
    "description": "Send ping with small binary (non UTF-8) payload.",
-   "droppedByMe": true,
-   "duration": 1012,
+   "droppedByMe": false,
+   "duration": 4,
    "expectation": "Pong with payload echo'ed is sent in reply to Ping. Clean close with normal code.",
    "expected": {
       "OK": [
@@ -30,43 +30,41 @@
    "httpResponse": "HTTP/1.1 101 Switching Protocols\r\nServer: AutobahnTestSuite/25.10.1-0.10.9\r\nX-Powered-By: AutobahnPython/0.10.9\r\nUpgrade: WebSocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n",
    "id": "2.3",
    "isServer": true,
-   "localCloseCode": null,
+   "localCloseCode": 1000,
    "localCloseReason": null,
    "received": [
       [
          "pong",
-         "0x0a887168f68c8f6a"
+         "0x00fffefdfcfb00ff"
       ]
    ],
    "remoteCloseCode": null,
    "remoteCloseReason": null,
    "reportCompressionRatio": false,
    "reportTime": false,
-   "result": "Actual events differ from any expected.",
-   "resultClose": "Connection was properly closed",
+   "result": "Actual events match at least one expected.",
+   "resultClose": "The spec requires the connection to be failed cleanly here",
    "rxFrameStats": {
-      "8": 1,
       "10": 1
    },
    "rxOctetStats": {
-      "6": 1,
       "14": 1,
       "186": 1
    },
-   "started": "2026-08-10T23:52:02.747Z",
+   "started": "2026-08-12T09:03:31.950Z",
    "trafficStats": null,
    "txFrameStats": {
       "8": 1,
       "9": 1
    },
    "txOctetStats": {
-      "2": 1,
+      "4": 1,
       "10": 1,
       "208": 1
    },
-   "wasClean": true,
+   "wasClean": false,
    "wasCloseHandshakeTimeout": false,
-   "wasNotCleanReason": null,
+   "wasNotCleanReason": "peer dropped the TCP connection without previous WebSocket closing handshake",
    "wasOpenHandshakeTimeout": false,
    "wasServerConnectionDropTimeout": false,
    "wirelog": [
@@ -115,29 +113,26 @@
          "RO",
          [
             14,
-            "8a880a778f9500fffefdfcfb00ff"
+            "8a880e5314d10eacea2cf2a8142e"
          ]
       ],
       [
          "RF",
          [
             8,
-            "0x0a887168f68c8f6a"
+            "0x00fffefdfcfb00ff"
          ],
          10,
          true,
          0,
          true,
-         "0a778f95"
-      ],
-      [
-         "TIE"
+         "0e5314d1"
       ],
       [
          "TF",
          [
-            0,
-            ""
+            2,
+            "0x03e8"
          ],
          8,
          true,
@@ -150,29 +145,10 @@
       [
          "TO",
          [
-            2,
-            "8800"
+            4,
+            "880203e8"
          ],
          false
-      ],
-      [
-         "RO",
-         [
-            6,
-            "8880762c40b3"
-         ]
-      ],
-      [
-         "RF",
-         [
-            0,
-            ""
-         ],
-         8,
-         true,
-         0,
-         true,
-         "762c40b3"
       ]
    ]
 }

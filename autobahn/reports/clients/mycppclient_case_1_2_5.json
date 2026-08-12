@@ -1,14 +1,14 @@
 {
    "agent": "MyCppClient",
    "behavior": "OK",
-   "behaviorClose": "WRONG CODE",
+   "behaviorClose": "UNCLEAN",
    "case": 13,
    "closedByMe": true,
    "createStats": true,
    "createWirelog": true,
    "description": "Send binary message message with payload of length 128.",
-   "droppedByMe": true,
-   "duration": 13,
+   "droppedByMe": false,
+   "duration": 10,
    "expectation": "Receive echo'ed binary message (with payload as sent). Clean close with normal code.",
    "expected": {
       "OK": [
@@ -40,22 +40,20 @@
          true
       ]
    ],
-   "remoteCloseCode": 3407,
+   "remoteCloseCode": null,
    "remoteCloseReason": null,
    "reportCompressionRatio": false,
    "reportTime": false,
    "result": "Actual events match at least one expected.",
-   "resultClose": "The close code should have been 1000 or empty",
+   "resultClose": "The spec requires the connection to be failed cleanly here",
    "rxFrameStats": {
-      "2": 1,
-      "8": 1
+      "2": 1
    },
    "rxOctetStats": {
-      "8": 1,
       "136": 1,
       "186": 1
    },
-   "started": "2026-08-10T23:52:01.419Z",
+   "started": "2026-08-12T09:03:31.543Z",
    "trafficStats": null,
    "txFrameStats": {
       "2": 1,
@@ -66,9 +64,9 @@
       "132": 1,
       "208": 1
    },
-   "wasClean": true,
+   "wasClean": false,
    "wasCloseHandshakeTimeout": false,
-   "wasNotCleanReason": null,
+   "wasNotCleanReason": "peer dropped the TCP connection without previous WebSocket closing handshake",
    "wasOpenHandshakeTimeout": false,
    "wasServerConnectionDropTimeout": false,
    "wirelog": [
@@ -117,7 +115,7 @@
          "RO",
          [
             136,
-            "82fe00803f1a59ecc1e4a712c1e4a712c1e4a712c1e4a712c1e4a712c1e4a712c1e4a712c1e4a712c1e4a712c1e4a712c1e4a712c1e4a712c1e4a712c1e4a712 ..."
+            "82fe0080e987e8941779166a1779166a1779166a1779166a1779166a1779166a1779166a1779166a1779166a1779166a1779166a1779166a1779166a1779166a ..."
          ]
       ],
       [
@@ -130,7 +128,7 @@
          true,
          0,
          true,
-         "3f1a59ec"
+         "e987e894"
       ],
       [
          "TF",
@@ -153,25 +151,6 @@
             "880203e8"
          ],
          false
-      ],
-      [
-         "RO",
-         [
-            8,
-            "88820ea7709003e8"
-         ]
-      ],
-      [
-         "RF",
-         [
-            2,
-            "\rO"
-         ],
-         8,
-         true,
-         0,
-         true,
-         "0ea77090"
       ]
    ]
 }

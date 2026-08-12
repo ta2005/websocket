@@ -13,7 +13,7 @@
 namespace ws {
 TcpSocket::~TcpSocket() {
     if (m_fd != -1) {
-        close(m_fd);
+        close();
     }
 }
 std::expected<TcpSocket, Error>
@@ -41,7 +41,7 @@ TcpSocket::connect(const std::string_view host, const std::string_view port) {
         if (::connect(socketfd, p->ai_addr, p->ai_addrlen) == -1) {
             ws::log::error("Failed to connect to {}:{} using protocol {}", host,
                            port, p->ai_protocol);
-            close(socketfd);
+            ::close(socketfd);
             socketfd = -1;
             continue;
         }
@@ -69,7 +69,7 @@ TcpSocket::TcpSocket(TcpSocket &&other) : m_fd(other.m_fd) { other.m_fd = -1; }
 TcpSocket &TcpSocket::operator=(TcpSocket &&other) {
     if (this != &other) {
         if (m_fd != -1)
-            close(m_fd);
+            close();
         m_fd       = other.m_fd;
         other.m_fd = -1;
     }

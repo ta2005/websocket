@@ -7,8 +7,8 @@
    "createStats": true,
    "createWirelog": true,
    "description": "Send a text message with payload which is valid UTF-8 in one fragment.<br><br>Payload: 0xf3bfbfbe",
-   "droppedByMe": true,
-   "duration": 11,
+   "droppedByMe": false,
+   "duration": 5,
    "expectation": "The message is echo'ed back to us.",
    "expected": {
       "OK": [
@@ -26,7 +26,7 @@
       "closedByMe": true,
       "requireClean": true
    },
-   "failedByMe": true,
+   "failedByMe": false,
    "httpRequest": "GET /runCase?case=199&agent=MyCppClient HTTP/1.1\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nHost: 127.0.0.1:9001\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n",
    "httpResponse": "HTTP/1.1 101 Switching Protocols\r\nServer: AutobahnTestSuite/25.10.1-0.10.9\r\nX-Powered-By: AutobahnPython/0.10.9\r\nUpgrade: WebSocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n",
    "id": "6.22.31",
@@ -40,22 +40,20 @@
          false
       ]
    ],
-   "remoteCloseCode": 56352,
+   "remoteCloseCode": null,
    "remoteCloseReason": null,
    "reportCompressionRatio": false,
    "reportTime": false,
    "result": "Actual events match at least one expected.",
    "resultClose": "The spec requires the connection to be failed cleanly here",
    "rxFrameStats": {
-      "1": 1,
-      "8": 1
+      "1": 1
    },
    "rxOctetStats": {
-      "8": 1,
       "10": 1,
       "187": 1
    },
-   "started": "2026-08-10T23:52:46.491Z",
+   "started": "2026-08-12T09:03:43.610Z",
    "trafficStats": null,
    "txFrameStats": {
       "1": 1,
@@ -68,7 +66,7 @@
    },
    "wasClean": false,
    "wasCloseHandshakeTimeout": false,
-   "wasNotCleanReason": null,
+   "wasNotCleanReason": "peer dropped the TCP connection without previous WebSocket closing handshake",
    "wasOpenHandshakeTimeout": false,
    "wasServerConnectionDropTimeout": false,
    "wirelog": [
@@ -117,7 +115,7 @@
          "RO",
          [
             10,
-            "818427a674ead419cb54"
+            "8184964c485d65f3f7e3"
          ]
       ],
       [
@@ -130,7 +128,7 @@
          true,
          0,
          true,
-         "27a674ea"
+         "964c485d"
       ],
       [
          "TF",
@@ -153,25 +151,6 @@
             "880203e8"
          ],
          false
-      ],
-      [
-         "RO",
-         [
-            8,
-            "8882dfc8330a03e8"
-         ]
-      ],
-      [
-         "RF",
-         [
-            2,
-            "0xdc20"
-         ],
-         8,
-         true,
-         0,
-         true,
-         "dfc8330a"
       ]
    ]
 }

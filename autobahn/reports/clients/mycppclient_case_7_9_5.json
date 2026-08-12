@@ -1,14 +1,14 @@
 {
    "agent": "MyCppClient",
-   "behavior": "FAILED",
-   "behaviorClose": "WRONG CODE",
+   "behavior": "OK",
+   "behaviorClose": "OK",
    "case": 240,
    "closedByMe": true,
    "createStats": true,
    "createWirelog": true,
    "description": "Send close with invalid close code 1006",
-   "droppedByMe": true,
-   "duration": 4,
+   "droppedByMe": false,
+   "duration": 2,
    "expectation": "Clean close with protocol error code or drop TCP",
    "expected": {
       "OK": []
@@ -20,7 +20,7 @@
       "closedByMe": true,
       "requireClean": false
    },
-   "failedByMe": true,
+   "failedByMe": false,
    "httpRequest": "GET /runCase?case=240&agent=MyCppClient HTTP/1.1\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nHost: 127.0.0.1:9001\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n",
    "httpResponse": "HTTP/1.1 101 Switching Protocols\r\nServer: AutobahnTestSuite/25.10.1-0.10.9\r\nX-Powered-By: AutobahnPython/0.10.9\r\nUpgrade: WebSocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n",
    "id": "7.9.5",
@@ -28,20 +28,17 @@
    "localCloseCode": 1006,
    "localCloseReason": null,
    "received": [],
-   "remoteCloseCode": 51918,
+   "remoteCloseCode": null,
    "remoteCloseReason": null,
    "reportCompressionRatio": false,
    "reportTime": false,
-   "result": "The close code should have been 1002 or empty",
-   "resultClose": "The close code should have been 1002 or empty",
-   "rxFrameStats": {
-      "8": 1
-   },
+   "result": "Actual events match at least one expected.",
+   "resultClose": "Connection was properly closed",
+   "rxFrameStats": {},
    "rxOctetStats": {
-      "8": 1,
       "187": 1
    },
-   "started": "2026-08-10T23:52:48.808Z",
+   "started": "2026-08-12T09:03:43.936Z",
    "trafficStats": null,
    "txFrameStats": {
       "8": 1
@@ -52,7 +49,7 @@
    },
    "wasClean": false,
    "wasCloseHandshakeTimeout": false,
-   "wasNotCleanReason": null,
+   "wasNotCleanReason": "peer dropped the TCP connection without previous WebSocket closing handshake",
    "wasOpenHandshakeTimeout": false,
    "wasServerConnectionDropTimeout": false,
    "wirelog": [
@@ -96,25 +93,6 @@
       [
          "KL",
          1
-      ],
-      [
-         "RO",
-         [
-            8,
-            "8882c920451d03ee"
-         ]
-      ],
-      [
-         "RF",
-         [
-            2,
-            "0xcace"
-         ],
-         8,
-         true,
-         0,
-         true,
-         "c920451d"
       ]
    ]
 }

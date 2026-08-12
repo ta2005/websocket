@@ -35,7 +35,17 @@ enum class Error {
     ControlFrameTooLarge,   // Control payload > 125 bytes
     ControlFrameFragmented, // Control frames cannot have FIN=0
     UnmaskedServerPayload,  // Server to client must NOT be masked
+    MessageTooLarge,        // Exceeded max_size in read_message
+    ProtocolError,          // Generic protocol violation
+    InvalidState,
 };
+
+// check if i must Fail the Websocket connection after error
+constexpr bool is_fatal(Error e) {
+    return e == Error::UnsupportedExtension || e == Error::UnsupporOpcode ||
+           e == Error::InvalidUTF8 || e == Error::ConnectionFailed ||
+           e == Error::ReadFailed;
+}
 
 constexpr std::string_view to_string(Error e) {
     switch (e) {
@@ -71,6 +81,12 @@ constexpr std::string_view to_string(Error e) {
             return "Control frames cannot be fragmented (FIN=0)";
         case Error::UnmaskedServerPayload:
             return "Payload from server must not be masked";
+        case Error::MessageTooLarge:
+            return "Message exceeded maximum allowed size";
+        case Error::ProtocolError:
+            return "Protocol violation";
+        case Error::NonFinControlFrame:
+            return "Control frames cannot be fragmented";
         default:
             return "Unknown Error";
     }

@@ -7,8 +7,8 @@
    "createStats": true,
    "createWirelog": true,
    "description": "Send text message message with payload of length 128.",
-   "droppedByMe": true,
-   "duration": 7,
+   "droppedByMe": false,
+   "duration": 5,
    "expectation": "Receive echo'ed text message (with payload as sent). Clean close with normal code.",
    "expected": {
       "OK": [
@@ -26,7 +26,7 @@
       "closedByMe": true,
       "requireClean": true
    },
-   "failedByMe": true,
+   "failedByMe": false,
    "httpRequest": "GET /runCase?case=5&agent=MyCppClient HTTP/1.1\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nHost: 127.0.0.1:9001\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n",
    "httpResponse": "HTTP/1.1 101 Switching Protocols\r\nServer: AutobahnTestSuite/25.10.1-0.10.9\r\nX-Powered-By: AutobahnPython/0.10.9\r\nUpgrade: WebSocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n",
    "id": "1.1.5",
@@ -40,22 +40,20 @@
          false
       ]
    ],
-   "remoteCloseCode": 17968,
+   "remoteCloseCode": null,
    "remoteCloseReason": null,
    "reportCompressionRatio": false,
    "reportTime": false,
    "result": "Actual events match at least one expected.",
    "resultClose": "The spec requires the connection to be failed cleanly here",
    "rxFrameStats": {
-      "1": 1,
-      "8": 1
+      "1": 1
    },
    "rxOctetStats": {
-      "8": 1,
       "136": 1,
       "185": 1
    },
-   "started": "2026-08-10T23:52:01.101Z",
+   "started": "2026-08-12T09:03:31.252Z",
    "trafficStats": null,
    "txFrameStats": {
       "1": 1,
@@ -68,7 +66,7 @@
    },
    "wasClean": false,
    "wasCloseHandshakeTimeout": false,
-   "wasNotCleanReason": null,
+   "wasNotCleanReason": "peer dropped the TCP connection without previous WebSocket closing handshake",
    "wasOpenHandshakeTimeout": false,
    "wasServerConnectionDropTimeout": false,
    "wirelog": [
@@ -117,7 +115,7 @@
          "RO",
          [
             136,
-            "81fe0080c9a7aa30e38d801ae38d801ae38d801ae38d801ae38d801ae38d801ae38d801ae38d801ae38d801ae38d801ae38d801ae38d801ae38d801ae38d801a ..."
+            "81fe0080744458415e6e726b5e6e726b5e6e726b5e6e726b5e6e726b5e6e726b5e6e726b5e6e726b5e6e726b5e6e726b5e6e726b5e6e726b5e6e726b5e6e726b ..."
          ]
       ],
       [
@@ -130,7 +128,7 @@
          true,
          0,
          true,
-         "c9a7aa30"
+         "74445841"
       ],
       [
          "TF",
@@ -153,25 +151,6 @@
             "880203e8"
          ],
          false
-      ],
-      [
-         "RO",
-         [
-            8,
-            "888245d8c6ec03e8"
-         ]
-      ],
-      [
-         "RF",
-         [
-            2,
-            "F0"
-         ],
-         8,
-         true,
-         0,
-         true,
-         "45d8c6ec"
       ]
    ]
 }

@@ -16,16 +16,13 @@ void run_test_case(int case_num, const std::string &host,
 
     // Autobahn Echo Loop
     while (true) {
-        auto chunk_res = client.read_chunk();
-        if (!chunk_res) {
+        auto msg = client.read_message();
+        if (!msg) {
             // Connection closed or protocol error encountered
             break;
         }
 
-        auto &chunk = *chunk_res;
-        if (chunk.type == ws::opcode::close) {
-            break;
-        }
+        auto &chunk = *msg;
 
         // Autobahn expects the client to echo back Text or Binary frames
         if (chunk.type == ws::opcode::text) {

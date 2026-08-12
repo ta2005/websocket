@@ -1,14 +1,14 @@
 {
    "agent": "MyCppClient",
    "behavior": "OK",
-   "behaviorClose": "FAILED",
+   "behaviorClose": "OK",
    "case": 29,
-   "closedByMe": true,
+   "closedByMe": false,
    "createStats": true,
    "createWirelog": true,
    "description": "Send small text message, then send again with <b>RSV = 2</b>, then send Ping.",
-   "droppedByMe": true,
-   "duration": 1007,
+   "droppedByMe": false,
+   "duration": 4,
    "expectation": "Echo for first message is received, but then connection is failed immediately, since RSV must be 0, when no extension defining RSV meaning has been negotiated. The Pong is not received.",
    "expected": {
       "NON-STRICT": [],
@@ -27,13 +27,13 @@
       "closedByMe": false,
       "requireClean": false
    },
-   "failedByMe": true,
+   "failedByMe": false,
    "httpRequest": "GET /runCase?case=29&agent=MyCppClient HTTP/1.1\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nHost: 127.0.0.1:9001\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n",
    "httpResponse": "HTTP/1.1 101 Switching Protocols\r\nServer: AutobahnTestSuite/25.10.1-0.10.9\r\nX-Powered-By: AutobahnPython/0.10.9\r\nUpgrade: WebSocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n",
    "id": "3.2",
    "isServer": true,
-   "localCloseCode": 1001,
-   "localCloseReason": "Going Away",
+   "localCloseCode": null,
+   "localCloseReason": null,
    "received": [
       [
          "message",
@@ -41,37 +41,33 @@
          false
       ]
    ],
-   "remoteCloseCode": 29632,
+   "remoteCloseCode": null,
    "remoteCloseReason": null,
    "reportCompressionRatio": false,
    "reportTime": false,
    "result": "Actual events match at least one expected.",
-   "resultClose": "The connection was failed by the wrong endpoint",
+   "resultClose": "Connection was properly closed",
    "rxFrameStats": {
-      "1": 1,
-      "8": 1
+      "1": 1
    },
    "rxOctetStats": {
-      "18": 1,
       "19": 1,
       "186": 1
    },
-   "started": "2026-08-10T23:52:13.021Z",
+   "started": "2026-08-12T09:03:32.144Z",
    "trafficStats": null,
    "txFrameStats": {
       "1": 2,
-      "8": 1,
       "9": 1
    },
    "txOctetStats": {
       "2": 1,
-      "14": 1,
       "15": 2,
       "208": 1
    },
    "wasClean": false,
    "wasCloseHandshakeTimeout": false,
-   "wasNotCleanReason": null,
+   "wasNotCleanReason": "peer dropped the TCP connection without previous WebSocket closing handshake",
    "wasOpenHandshakeTimeout": false,
    "wasServerConnectionDropTimeout": false,
    "wirelog": [
@@ -164,7 +160,7 @@
          "RO",
          [
             19,
-            "818d4eb3a4a206d6c8ce219f84d521c1c8c66f"
+            "818d107f93b9581affd57f53b3ce7f0dffdd31"
          ]
       ],
       [
@@ -177,51 +173,7 @@
          true,
          0,
          true,
-         "4eb3a4a2"
-      ],
-      [
-         "KLE"
-      ],
-      [
-         "TF",
-         [
-            12,
-            "0x03e9476f696e672041776179"
-         ],
-         8,
-         true,
-         0,
-         null,
-         null,
-         null,
-         false
-      ],
-      [
-         "TO",
-         [
-            14,
-            "880c03e9476f696e672041776179"
-         ],
-         false
-      ],
-      [
-         "RO",
-         [
-            18,
-            "888c7029d62003e9476f696e672041776179"
-         ]
-      ],
-      [
-         "RF",
-         [
-            12,
-            "0x73c0914f1947b100315eb759"
-         ],
-         8,
-         true,
-         0,
-         true,
-         "7029d620"
+         "107f93b9"
       ]
    ]
 }

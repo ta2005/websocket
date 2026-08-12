@@ -7,7 +7,7 @@
    "createStats": true,
    "createWirelog": true,
    "description": "Send a text message with payload which is valid UTF-8 in one fragment.<br><br>Payload: 0xceba",
-   "droppedByMe": true,
+   "droppedByMe": false,
    "duration": 5,
    "expectation": "The message is echo'ed back to us.",
    "expected": {
@@ -26,7 +26,7 @@
       "closedByMe": true,
       "requireClean": true
    },
-   "failedByMe": true,
+   "failedByMe": false,
    "httpRequest": "GET /runCase?case=84&agent=MyCppClient HTTP/1.1\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nHost: 127.0.0.1:9001\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n",
    "httpResponse": "HTTP/1.1 101 Switching Protocols\r\nServer: AutobahnTestSuite/25.10.1-0.10.9\r\nX-Powered-By: AutobahnPython/0.10.9\r\nUpgrade: WebSocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n",
    "id": "6.6.2",
@@ -40,21 +40,20 @@
          false
       ]
    ],
-   "remoteCloseCode": 25009,
+   "remoteCloseCode": null,
    "remoteCloseReason": null,
    "reportCompressionRatio": false,
    "reportTime": false,
    "result": "Actual events match at least one expected.",
    "resultClose": "The spec requires the connection to be failed cleanly here",
    "rxFrameStats": {
-      "1": 1,
-      "8": 1
+      "1": 1
    },
    "rxOctetStats": {
-      "8": 2,
+      "8": 1,
       "186": 1
    },
-   "started": "2026-08-10T23:52:45.813Z",
+   "started": "2026-08-12T09:03:42.886Z",
    "trafficStats": null,
    "txFrameStats": {
       "1": 1,
@@ -66,7 +65,7 @@
    },
    "wasClean": false,
    "wasCloseHandshakeTimeout": false,
-   "wasNotCleanReason": null,
+   "wasNotCleanReason": "peer dropped the TCP connection without previous WebSocket closing handshake",
    "wasOpenHandshakeTimeout": false,
    "wasServerConnectionDropTimeout": false,
    "wirelog": [
@@ -115,7 +114,7 @@
          "RO",
          [
             8,
-            "8182de8c21521036"
+            "81829eecb4cb5056"
          ]
       ],
       [
@@ -128,7 +127,7 @@
          true,
          0,
          true,
-         "de8c2152"
+         "9eecb4cb"
       ],
       [
          "TF",
@@ -151,25 +150,6 @@
             "880203e8"
          ],
          false
-      ],
-      [
-         "RO",
-         [
-            8,
-            "88826259abc803e8"
-         ]
-      ],
-      [
-         "RF",
-         [
-            2,
-            "0x61b1"
-         ],
-         8,
-         true,
-         0,
-         true,
-         "6259abc8"
       ]
    ]
 }

@@ -1,14 +1,14 @@
 {
    "agent": "MyCppClient",
-   "behavior": "FAILED",
-   "behaviorClose": "FAILED",
+   "behavior": "OK",
+   "behaviorClose": "UNCLEAN",
    "case": 49,
-   "closedByMe": false,
+   "closedByMe": true,
    "createStats": true,
    "createWirelog": true,
    "description": "Send text Message fragmented into 2 fragments, octets are sent in octet-wise chops.",
    "droppedByMe": false,
-   "duration": 22,
+   "duration": 9,
    "expectation": "Message is processed and echo'ed back to us.",
    "expected": {
       "OK": [
@@ -31,12 +31,12 @@
    "httpResponse": "HTTP/1.1 101 Switching Protocols\r\nServer: AutobahnTestSuite/25.10.1-0.10.9\r\nX-Powered-By: AutobahnPython/0.10.9\r\nUpgrade: WebSocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n",
    "id": "5.5",
    "isServer": true,
-   "localCloseCode": null,
+   "localCloseCode": 1000,
    "localCloseReason": null,
    "received": [
       [
          "message",
-         "fragment1",
+         "fragment1fragment2",
          false
       ]
    ],
@@ -44,23 +44,25 @@
    "remoteCloseReason": null,
    "reportCompressionRatio": false,
    "reportTime": false,
-   "result": "Actual events differ from any expected.",
-   "resultClose": "The connection was failed by the wrong endpoint",
+   "result": "Actual events match at least one expected.",
+   "resultClose": "The spec requires the connection to be failed cleanly here",
    "rxFrameStats": {
       "1": 1
    },
    "rxOctetStats": {
-      "15": 1,
+      "24": 1,
       "186": 1
    },
-   "started": "2026-08-10T23:52:21.263Z",
+   "started": "2026-08-12T09:03:32.267Z",
    "trafficStats": null,
    "txFrameStats": {
       "0": 1,
-      "1": 1
+      "1": 1,
+      "8": 1
    },
    "txOctetStats": {
-      "1": 13,
+      "1": 22,
+      "4": 1,
       "208": 1
    },
    "wasClean": false,
@@ -213,31 +215,125 @@
          true
       ],
       [
-         "RO",
-         [
-            15,
-            "81894293b09824e1d1ff2ff6deec73"
-         ]
-      ],
-      [
-         "RF",
-         [
-            9,
-            "fragment1"
-         ],
-         1,
-         true,
-         0,
-         true,
-         "4293b098"
-      ],
-      [
          "TO",
          [
             1,
             "09"
          ],
          true
+      ],
+      [
+         "TO",
+         [
+            1,
+            "66"
+         ],
+         true
+      ],
+      [
+         "TO",
+         [
+            1,
+            "72"
+         ],
+         true
+      ],
+      [
+         "TO",
+         [
+            1,
+            "61"
+         ],
+         true
+      ],
+      [
+         "TO",
+         [
+            1,
+            "67"
+         ],
+         true
+      ],
+      [
+         "TO",
+         [
+            1,
+            "6d"
+         ],
+         true
+      ],
+      [
+         "TO",
+         [
+            1,
+            "65"
+         ],
+         true
+      ],
+      [
+         "TO",
+         [
+            1,
+            "6e"
+         ],
+         true
+      ],
+      [
+         "TO",
+         [
+            1,
+            "74"
+         ],
+         true
+      ],
+      [
+         "TO",
+         [
+            1,
+            "32"
+         ],
+         true
+      ],
+      [
+         "RO",
+         [
+            24,
+            "81926a4e2faf0c3c4ec8072b41db5b285dce0d234ac11e7c"
+         ]
+      ],
+      [
+         "RF",
+         [
+            18,
+            "fragment1fragment2"
+         ],
+         1,
+         true,
+         0,
+         true,
+         "6a4e2faf"
+      ],
+      [
+         "TF",
+         [
+            2,
+            "0x03e8"
+         ],
+         8,
+         true,
+         0,
+         null,
+         null,
+         null,
+         false
+      ],
+      [
+         "TO",
+         [
+            4,
+            "880203e8"
+         ],
+         false
       ]
    ]
 }

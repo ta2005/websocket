@@ -2,13 +2,13 @@
    "agent": "MyCppClient",
    "behavior": "UNIMPLEMENTED",
    "behaviorClose": "UNCLEAN",
-   "case": 351,
+   "case": 297,
    "closedByMe": true,
    "createStats": true,
    "createWirelog": false,
    "description": "Send 1000 compressed messages each of payload size 65536, auto-fragment to 256 octets. Use default permessage-deflate offer.",
-   "droppedByMe": true,
-   "duration": 1003,
+   "droppedByMe": false,
+   "duration": 2,
    "expectation": "Receive echo'ed messages (with payload as sent). Timeout case after 480 secs.",
    "expected": {},
    "expectedClose": {
@@ -19,7 +19,7 @@
       "requireClean": true
    },
    "failedByMe": false,
-   "httpRequest": "GET /runCase?case=351&agent=MyCppClient HTTP/1.1\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nHost: 127.0.0.1:9001\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n",
+   "httpRequest": "GET /runCase?case=297&agent=MyCppClient HTTP/1.1\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nHost: 127.0.0.1:9001\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n",
    "httpResponse": "HTTP/1.1 101 Switching Protocols\r\nServer: AutobahnTestSuite/25.10.1-0.10.9\r\nX-Powered-By: AutobahnPython/0.10.9\r\nUpgrade: WebSocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n",
    "id": "12.3.14",
    "isServer": true,
@@ -36,7 +36,7 @@
    "rxOctetStats": {
       "187": 1
    },
-   "started": "2026-08-10T17:11:40.613Z",
+   "started": "2026-08-12T09:03:44.499Z",
    "trafficStats": null,
    "txFrameStats": {
       "8": 1
@@ -46,8 +46,8 @@
       "208": 1
    },
    "wasClean": false,
-   "wasCloseHandshakeTimeout": true,
-   "wasNotCleanReason": "peer did not respond (in time) in closing handshake",
+   "wasCloseHandshakeTimeout": false,
+   "wasNotCleanReason": "peer dropped the TCP connection without previous WebSocket closing handshake",
    "wasOpenHandshakeTimeout": false,
    "wasServerConnectionDropTimeout": false,
    "wirelog": [
@@ -55,7 +55,7 @@
          "RO",
          [
             187,
-            "474554202f72756e436173653f636173653d333531266167656e743d4d79437070436c69656e7420485454502f312e310d0a436f6e6e656374696f6e3a205570 ..."
+            "474554202f72756e436173653f636173653d323937266167656e743d4d79437070436c69656e7420485454502f312e310d0a436f6e6e656374696f6e3a205570 ..."
          ]
       ],
       [

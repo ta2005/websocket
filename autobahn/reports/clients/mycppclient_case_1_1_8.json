@@ -7,8 +7,8 @@
    "createStats": true,
    "createWirelog": true,
    "description": "Send text message message with payload of length 65536. Sent out data in chops of 997 octets.",
-   "droppedByMe": true,
-   "duration": 102,
+   "droppedByMe": false,
+   "duration": 96,
    "expectation": "Receive echo'ed text message (with payload as sent). Clean close with normal code.",
    "expected": {
       "OK": [
@@ -26,7 +26,7 @@
       "closedByMe": true,
       "requireClean": true
    },
-   "failedByMe": true,
+   "failedByMe": false,
    "httpRequest": "GET /runCase?case=8&agent=MyCppClient HTTP/1.1\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nHost: 127.0.0.1:9001\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n",
    "httpResponse": "HTTP/1.1 101 Switching Protocols\r\nServer: AutobahnTestSuite/25.10.1-0.10.9\r\nX-Powered-By: AutobahnPython/0.10.9\r\nUpgrade: WebSocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n",
    "id": "1.1.8",
@@ -40,7 +40,7 @@
          false
       ]
    ],
-   "remoteCloseCode": 21867,
+   "remoteCloseCode": null,
    "remoteCloseReason": null,
    "reportCompressionRatio": false,
    "reportTime": false,
@@ -48,17 +48,15 @@
    "resultClose": "The spec requires the connection to be failed cleanly here",
    "rxFrameStats": {
       "0": 7,
-      "1": 1,
-      "8": 1
+      "1": 1
    },
    "rxOctetStats": {
-      "8": 1,
       "185": 1,
       "8200": 1,
       "24600": 1,
       "32800": 1
    },
-   "started": "2026-08-10T23:52:01.250Z",
+   "started": "2026-08-12T09:03:31.396Z",
    "trafficStats": null,
    "txFrameStats": {
       "1": 1,
@@ -72,7 +70,7 @@
    },
    "wasClean": false,
    "wasCloseHandshakeTimeout": false,
-   "wasNotCleanReason": null,
+   "wasNotCleanReason": "peer dropped the TCP connection without previous WebSocket closing handshake",
    "wasOpenHandshakeTimeout": false,
    "wasServerConnectionDropTimeout": false,
    "wirelog": [
@@ -641,7 +639,7 @@
          "RO",
          [
             8200,
-            "01fe20000f69eca32543c6892543c6892543c6892543c6892543c6892543c6892543c6892543c6892543c6892543c6892543c6892543c6892543c6892543c689 ..."
+            "01fe20002e060034042c2a1e042c2a1e042c2a1e042c2a1e042c2a1e042c2a1e042c2a1e042c2a1e042c2a1e042c2a1e042c2a1e042c2a1e042c2a1e042c2a1e ..."
          ]
       ],
       [
@@ -654,13 +652,13 @@
          false,
          0,
          true,
-         "0f69eca3"
+         "2e060034"
       ],
       [
          "RO",
          [
             32800,
-            "00fe2000ba71cb79905be153905be153905be153905be153905be153905be153905be153905be153905be153905be153905be153905be153905be153905be153 ..."
+            "00fe20008306e656a92ccc7ca92ccc7ca92ccc7ca92ccc7ca92ccc7ca92ccc7ca92ccc7ca92ccc7ca92ccc7ca92ccc7ca92ccc7ca92ccc7ca92ccc7ca92ccc7c ..."
          ]
       ],
       [
@@ -673,7 +671,7 @@
          false,
          0,
          true,
-         "ba71cb79"
+         "8306e656"
       ],
       [
          "RF",
@@ -685,7 +683,7 @@
          false,
          0,
          true,
-         "60eaa0d5"
+         "ba0a99c0"
       ],
       [
          "RF",
@@ -697,7 +695,7 @@
          false,
          0,
          true,
-         "4ec6e8e4"
+         "e60d4c05"
       ],
       [
          "RF",
@@ -709,13 +707,13 @@
          false,
          0,
          true,
-         "964264a2"
+         "d0b9b1ac"
       ],
       [
          "RO",
          [
             24600,
-            "00fe2000c3b48b81e99ea1abe99ea1abe99ea1abe99ea1abe99ea1abe99ea1abe99ea1abe99ea1abe99ea1abe99ea1abe99ea1abe99ea1abe99ea1abe99ea1ab ..."
+            "00fe200083e9bffda9c395d7a9c395d7a9c395d7a9c395d7a9c395d7a9c395d7a9c395d7a9c395d7a9c395d7a9c395d7a9c395d7a9c395d7a9c395d7a9c395d7 ..."
          ]
       ],
       [
@@ -728,7 +726,7 @@
          false,
          0,
          true,
-         "c3b48b81"
+         "83e9bffd"
       ],
       [
          "RF",
@@ -740,7 +738,7 @@
          false,
          0,
          true,
-         "9b216238"
+         "f7afb15a"
       ],
       [
          "RF",
@@ -752,7 +750,7 @@
          true,
          0,
          true,
-         "f094d6c1"
+         "c9644e56"
       ],
       [
          "TF",
@@ -775,25 +773,6 @@
             "880203e8"
          ],
          false
-      ],
-      [
-         "RO",
-         [
-            8,
-            "88825683dfff03e8"
-         ]
-      ],
-      [
-         "RF",
-         [
-            2,
-            "Uk"
-         ],
-         8,
-         true,
-         0,
-         true,
-         "5683dfff"
       ]
    ]
 }

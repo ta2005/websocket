@@ -7,6 +7,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <unistd.h>
 
 namespace ws {
 class TcpSocket {
@@ -21,8 +22,9 @@ class TcpSocket {
     TcpSocket(const TcpSocket &)            = delete;
     TcpSocket &operator=(const TcpSocket &) = delete;
     ~TcpSocket();
-    int get_fd() const { return m_fd; }
-        operator bool() { return m_fd != -1; }
+    void close() { ::close(m_fd); }
+    int  get_fd() const { return m_fd; }
+         operator bool() { return m_fd != -1; }
     // i don't maybe i will change the interface later
     std::expected<size_t, Error> send(const std::span<const uint8_t>) const;
     std::expected<size_t, Error> send(const std::string_view) const;
