@@ -28,3 +28,7 @@ todo change the string_views into enums
 next :
 some refacting to the client send_impl and read_impl
 adding proper errro handling 
+
+next :
+implemention coroutines in cpp
+with level triggered epoll

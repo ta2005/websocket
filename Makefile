@@ -47,3 +47,6 @@ run: all
 
 format:
 	@clang-format -i $(SRCS) $(HEADERS) --verbose
+
+coroutine:src/main.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) src/main.cpp -o coroutine

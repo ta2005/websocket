@@ -1,71 +1,142 @@
-// #include <print>
-// #include <string_view>
-// #include <unistd.h>
-//
-// #include "client.hpp"
-// #include "logger.hpp"
-//
-// int main(int argc, char **argv) {
-//     std::string_view s       = "localhost";
-//     std::string_view port    = "8765";
-//     std::string_view message = "Hello world my name is Tale Zighni";
-//
-//     if (argc > 2) {
-//         s = argv[1];
-//         if (argc == 3)
-//             port = argv[2];
-//         if (argc == 4) {
-//             message = argv[3];
-//         }
-//     }
-//
-//     auto client_res = ws::Client::create(s, "/", port);
-//     if (!client_res) {
-//         std::print("Failed to connect/handshake: {}\n", client_res.error());
-//         return 1;
-//     }
-//     ws::Client client = std::move(*client_res);
-//
-//     ws::log::info("Sending message...");
-//     auto send_res = client.send(message);
-//     if (!send_res) {
-//         std::print("Send failed: {}\n", send_res.error());
-//         return 1;
-//     }
-//
-//     ws::log::info("Waiting for server response...");
-//     auto chunk_res = client.read_chunk();
-//     if (!chunk_res) {
-//         std::print("Read failed: {}\n", chunk_res.error());
-//         return 1;
-//     }
-//
-//     ws::ChunckView view = *chunk_res;
-//
-//     std::print("\n=== RECEIVED FRAME ===\n");
-//     std::print("Opcode: {}\n", static_cast<int>(view.type));
-//     std::print("FIN bit: {}\n", view.is_fin);
-//     std::print("Payload Length: {} bytes\n", view.payload.size());
-//
-//     // Print the payload as a string
-//     std::string_view payload_str(
-//         reinterpret_cast<const char *>(view.payload.data()),
-//         view.payload.size());
-//     std::print("Payload Data: {}\n", payload_str);
-//     std::print("======================\n\n");
-//
-//     if (!client.close()) {
-//         return 1;
-//     }
-//     return 0;
-// }
-// /*curl --include \
-//      --no-buffer \
-//      --header "Connection: Upgrade" \
-//      --header "Upgrade: websocket" \
-//      --header "Host: echo.websocket.org" \
-//      --header "Origin: https://www.websocket.org" \
-//      --header "Sec-WebSocket-Key: SGVsbG8sIHdvcmxkIQ==" \
-//      --header "Sec-WebSocket-Version: 13" \
-//      https://echo.websocket.org
-//     */
+#include <coroutine>
+#include <print>
+#include <sys/epoll.h>
+#include <unistd.h>
+#include <utility>
+#include <string_view>
+#include "tcp_socket.hpp"
+
+using std::println;
+
+// Context helper to bundle the FD and Coroutine Handle together
+struct SocketContext {
+    int fd;
+    std::coroutine_handle<> handle;
+};
+
+struct EventLoop {
+    int fd_;
+
+    EventLoop() {
+        fd_ = epoll_create1(0);
+        if (fd_ == -1) {
+            throw "epoll_create1 failed";
+        }
+    }
+
+    ~EventLoop() {
+        if (fd_ != -1) ::close(fd_);
+    }
+
+    void register_event(int socket_fd, uint32_t events, SocketContext* ctx) {
+        epoll_event ev{};
+        ev.events = events | EPOLLONESHOT; // Fires once, then disarms
+        ev.data.ptr = ctx;                 // Store pointer to context
+        epoll_ctl(fd_, EPOLL_CTL_ADD, socket_fd, &ev);
+    }
+
+    void run_once() {
+        epoll_event events[10];
+        int nfds = epoll_wait(fd_, events, 10, -1);
+        for (int i = 0; i < nfds; i++) {
+            auto* ctx = static_cast<SocketContext*>(events[i].data.ptr);
+            
+            // Clean up epoll registration
+            epoll_ctl(fd_, EPOLL_CTL_DEL, ctx->fd, nullptr);
+            
+            // Wake up the coroutine!
+            if (ctx->handle && !ctx->handle.done()) {
+                ctx->handle.resume();
+            }
+        }
+    }
+};
+
+template <class T = void>
+struct task {
+    struct promise_type {
+        void unhandled_exception() { println("{}", __PRETTY_FUNCTION__); }
+        void return_void() {} // Required when coroutine ends
+        
+        std::suspend_always initial_suspend() noexcept { return {}; }
+        
+        task get_return_object() {
+            return task(std::coroutine_handle<promise_type>::from_promise(*this));
+        }
+        
+        std::suspend_always final_suspend() noexcept { return {}; }
+    };
+
+    using Handle = std::coroutine_handle<promise_type>;
+    Handle h_;
+
+    explicit task(Handle h) : h_(h) {}
+    
+    ~task() {
+        if (h_) h_.destroy();
+    }
+
+    // Task MUST be move-only to prevent double-destroying handle
+    task(const task&) = delete;
+    task& operator=(const task&) = delete;
+    
+    task(task&& o) noexcept : h_(std::exchange(o.h_, nullptr)) {}
+    task& operator=(task&& o) noexcept {
+        if (this != &o) {
+            if (h_) h_.destroy();
+            h_ = std::exchange(o.h_, nullptr);
+        }
+        return *this;
+    }
+};
+
+struct AwaitableWrite {
+    int fd;
+    EventLoop& loop; // Passed BY REFERENCE
+    std::string data;
+    SocketContext ctx{};
+
+    bool await_ready() const noexcept { return false; }
+
+    void await_suspend(std::coroutine_handle<> h) noexcept {
+        ctx = {fd, h};
+        loop.register_event(fd, EPOLLOUT, &ctx);
+    }
+
+    void await_resume() noexcept {
+        println("{}", __PRETTY_FUNCTION__);
+        ::write(fd, data.c_str(), data.size());
+    }
+};
+
+// 1. The Coroutine Function
+task<void> run_client(int socket_fd, EventLoop& loop) {
+    println("[Coroutine] Suspending until socket is writable...");
+    
+    // 2. co_await registers with epoll and suspends!
+    co_await AwaitableWrite{socket_fd, loop, "Hello World from Async Coroutine!\n"};
+    
+    println("[Coroutine] Resumed and write complete!");
+}
+
+int main() {
+    auto t = ws::TcpSocket::connect("127.0.0.1", "8080");
+    if (!t) {
+        println("Connection failed!");
+        return 1;
+    }
+
+    EventLoop loop{};
+
+    // Start the coroutine (it suspends at initial_suspend)
+    auto client_task = run_client(t->get_fd(), loop);
+
+    // Kick off the coroutine until it hits co_await
+    client_task.h_.resume();
+
+    // Run epoll loop to catch the socket event and resume the coroutine
+    println("[Main] Entering epoll event loop...");
+    loop.run_once();
+
+    return 0;
+}
