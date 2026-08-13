@@ -1,6 +1,5 @@
 #include <cerrno>
 #include <cstring>
-#include <expected>
 #include <fcntl.h>
 #include <netdb.h>
 #include <sys/socket.h>
@@ -33,11 +32,6 @@ TcpSocket::connect(const std::string_view host, const std::string_view port) {
             -1) {
             continue;
         }
-        // maybe add some loging capability through some uniform interface later
-        // char h[INET6_ADDRSTRLEN];
-        // inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),
-        //           host, sizeof host);
-        // std::print("\033[32mconnection to {}\033[0m\n", host);
         if (::connect(socketfd, p->ai_addr, p->ai_addrlen) == -1) {
             ws::log::error("Failed to connect to {}:{} using protocol {}", host,
                            port, p->ai_protocol);
@@ -48,19 +42,6 @@ TcpSocket::connect(const std::string_view host, const std::string_view port) {
         ws::log::info("Successfully connected to {}:{}", host, port);
         break;
     }
-    //
-    //    if (socketfd == -1) {
-    //        return std::unexpected("unable to connect");
-    //    }
-    //    auto flags = fcntl(socketfd,F_GETFL);
-    //    if(flags==-1){
-    // return std::unexpected("unable to get the flags to socket");
-    //    }
-    //    flags=fcntl(socketfd,F_SETFL,flags|O_NONBLOCK);
-    //    if(flags==-1){
-    // return std::unexpected("unable to set non blocking socket");
-    //    }
-
     freeaddrinfo(res);
     return TcpSocket(socketfd);
 }

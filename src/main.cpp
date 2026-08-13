@@ -1,16 +1,16 @@
+#include "tcp_socket.hpp"
 #include <coroutine>
 #include <print>
+#include <string_view>
 #include <sys/epoll.h>
 #include <unistd.h>
 #include <utility>
-#include <string_view>
-#include "tcp_socket.hpp"
 
 using std::println;
 
 // Context helper to bundle the FD and Coroutine Handle together
 struct SocketContext {
-    int fd;
+    int                     fd;
     std::coroutine_handle<> handle;
 };
 
@@ -25,25 +25,26 @@ struct EventLoop {
     }
 
     ~EventLoop() {
-        if (fd_ != -1) ::close(fd_);
+        if (fd_ != -1)
+            ::close(fd_);
     }
 
-    void register_event(int socket_fd, uint32_t events, SocketContext* ctx) {
+    void register_event(int socket_fd, uint32_t events, SocketContext *ctx) {
         epoll_event ev{};
-        ev.events = events | EPOLLONESHOT; // Fires once, then disarms
-        ev.data.ptr = ctx;                 // Store pointer to context
+        ev.events   = events | EPOLLONESHOT; // Fires once, then disarms
+        ev.data.ptr = ctx;                   // Store pointer to context
         epoll_ctl(fd_, EPOLL_CTL_ADD, socket_fd, &ev);
     }
 
     void run_once() {
         epoll_event events[10];
-        int nfds = epoll_wait(fd_, events, 10, -1);
+        int         nfds = epoll_wait(fd_, events, 10, -1);
         for (int i = 0; i < nfds; i++) {
-            auto* ctx = static_cast<SocketContext*>(events[i].data.ptr);
-            
+            auto *ctx = static_cast<SocketContext *>(events[i].data.ptr);
+
             // Clean up epoll registration
             epoll_ctl(fd_, EPOLL_CTL_DEL, ctx->fd, nullptr);
-            
+
             // Wake up the coroutine!
             if (ctx->handle && !ctx->handle.done()) {
                 ctx->handle.resume();
@@ -52,18 +53,18 @@ struct EventLoop {
     }
 };
 
-template <class T = void>
-struct task {
+template <class T = void> struct task {
     struct promise_type {
         void unhandled_exception() { println("{}", __PRETTY_FUNCTION__); }
         void return_void() {} // Required when coroutine ends
-        
+
         std::suspend_always initial_suspend() noexcept { return {}; }
-        
+
         task get_return_object() {
-            return task(std::coroutine_handle<promise_type>::from_promise(*this));
+            return task(
+                std::coroutine_handle<promise_type>::from_promise(*this));
         }
-        
+
         std::suspend_always final_suspend() noexcept { return {}; }
     };
 
@@ -71,19 +72,21 @@ struct task {
     Handle h_;
 
     explicit task(Handle h) : h_(h) {}
-    
+
     ~task() {
-        if (h_) h_.destroy();
+        if (h_)
+            h_.destroy();
     }
 
     // Task MUST be move-only to prevent double-destroying handle
-    task(const task&) = delete;
-    task& operator=(const task&) = delete;
-    
-    task(task&& o) noexcept : h_(std::exchange(o.h_, nullptr)) {}
-    task& operator=(task&& o) noexcept {
+    task(const task &)            = delete;
+    task &operator=(const task &) = delete;
+
+    task(task &&o) noexcept : h_(std::exchange(o.h_, nullptr)) {}
+    task &operator=(task &&o) noexcept {
         if (this != &o) {
-            if (h_) h_.destroy();
+            if (h_)
+                h_.destroy();
             h_ = std::exchange(o.h_, nullptr);
         }
         return *this;
@@ -91,9 +94,9 @@ struct task {
 };
 
 struct AwaitableWrite {
-    int fd;
-    EventLoop& loop; // Passed BY REFERENCE
-    std::string data;
+    int           fd;
+    EventLoop    &loop; // Passed BY REFERENCE
+    std::string   data;
     SocketContext ctx{};
 
     bool await_ready() const noexcept { return false; }
@@ -110,12 +113,13 @@ struct AwaitableWrite {
 };
 
 // 1. The Coroutine Function
-task<void> run_client(int socket_fd, EventLoop& loop) {
+task<void> run_client(int socket_fd, EventLoop &loop) {
     println("[Coroutine] Suspending until socket is writable...");
-    
+
     // 2. co_await registers with epoll and suspends!
-    co_await AwaitableWrite{socket_fd, loop, "Hello World from Async Coroutine!\n"};
-    
+    co_await AwaitableWrite{socket_fd, loop,
+                            "Hello World from Async Coroutine!\n"};
+
     println("[Coroutine] Resumed and write complete!");
 }
 
