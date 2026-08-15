@@ -1,7 +1,7 @@
 #ifndef WS_ERROR_HPP
 #define WS_ERROR_HPP
 
-#include "status_code.hpp"
+#include "common/status_code.hpp"
 #include <string_view>
 
 namespace ws {

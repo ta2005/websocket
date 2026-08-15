@@ -1,10 +1,10 @@
 #ifndef PARSE_CLOSE_CPP
 #define PARSE_CLOSE_CPP
 
-#include "details/parse_meta.hpp"
-#include "error.hpp"
+#include "common/details/parse_meta.hpp"
+#include "common/error.hpp"
 #include "simdutf.h"
-#include "status_code.hpp"
+#include "common/status_code.hpp"
 #include <cassert>
 #include <cstdint>
 #include <expected>

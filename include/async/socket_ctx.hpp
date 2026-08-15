@@ -10,6 +10,7 @@ struct SocketCtx {
     int    fd;
     Handle read_handle;
     Handle write_handle;
+    int    events;
 };
 } // namespace ws::async
 

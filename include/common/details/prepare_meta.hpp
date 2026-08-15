@@ -2,7 +2,7 @@
 #ifndef PREPARE_META_HPP
 #define PREPARE_META_HPP
 
-#include "opcode.hpp"
+#include "common/opcode.hpp"
 #include <assert.h>
 #include <cstring>
 #include <span>

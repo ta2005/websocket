@@ -1,10 +1,10 @@
 
-#include "client.hpp"
-#include "details/mask_payload.hpp"
-#include "details/prepare_meta.hpp"
-#include "error.hpp"
-#include "handshake.hpp"
-#include "logger.hpp"
+#include "sync/client.hpp"
+#include "common/details/mask_payload.hpp"
+#include "common/details/prepare_meta.hpp"
+#include "common/error.hpp"
+#include "sync/handshake.hpp"
+#include "common/logger.hpp"
 #include "simdutf.h"
 #include <arpa/inet.h>
 

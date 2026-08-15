@@ -1,7 +1,7 @@
 #ifndef TCP_SOCKET_HPP
 #define TCP_SOCKET_HPP
 
-#include "error.hpp"
+#include "common/error.hpp"
 #include <cstdint>
 #include <expected>
 #include <span>

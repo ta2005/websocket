@@ -10,7 +10,7 @@ BUILD_DIR  := build
 TARGET     := websock_client
 
 # Automatically find source and header files
-SRCS    := $(wildcard $(SRC_DIR)/*.cpp)
+SRCS    := $(shell find $(SRC_DIR) -name "*.cpp" ! -name "example.cpp")
 HEADERS := $(shell find $(HEADER_DIR) -type f \( -name "*.h" -o -name "*.hpp" \))
 OBJS    := $(SRCS:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o)
 VENDOR_OBJ := $(BUILD_DIR)/simdutf.o
@@ -29,7 +29,8 @@ $(BUILD_DIR)/simdutf.o: vendor/simdutf.cpp | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
 # Compile source files to object files
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
 # Create build directory if missing

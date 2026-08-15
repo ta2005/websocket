@@ -6,8 +6,8 @@
 #include <sys/uio.h>
 #include <unistd.h>
 
-#include "logger.hpp"
-#include "tcp_socket.hpp"
+#include "common/logger.hpp"
+#include "sync/tcp_socket.hpp"
 
 namespace ws {
 TcpSocket::~TcpSocket() {

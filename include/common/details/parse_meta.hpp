@@ -1,8 +1,8 @@
 #ifndef PARSE_META_HPP
 #define PARSE_META_HPP
 
-#include "error.hpp"
-#include "opcode.hpp"
+#include "common/error.hpp"
+#include "common/opcode.hpp"
 #include <cstdint>
 #include <expected>
 #include <netinet/in.h>

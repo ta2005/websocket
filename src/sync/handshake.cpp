@@ -1,7 +1,7 @@
 // #define WS_DEBUG 0
 
-#include "handshake.hpp"
-#include "logger.hpp"
+#include "sync/handshake.hpp"
+#include "common/logger.hpp"
 #include <algorithm>
 #include <cctype>
 #include <expected>

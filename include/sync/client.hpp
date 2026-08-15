@@ -1,9 +1,9 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
-#include "details/parse_meta.hpp"
-#include "opcode.hpp"
-#include "tcp_socket.hpp"
+#include "common/details/parse_meta.hpp"
+#include "common/opcode.hpp"
+#include "sync/tcp_socket.hpp"
 #include <random>
 #include <string_view>
 #include <vector>
