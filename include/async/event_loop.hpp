@@ -26,8 +26,8 @@ class EventLoop {
     // this will change when i create the
     // tcp class
     void register_socket(TcpSocket &);
-    void register_read(TcpSocket &,Handle);
-    void register_write(TcpSocket &,Handle);
+    void register_read(TcpSocket &, Handle);
+    void register_write(TcpSocket &, Handle);
     // void rearm(SocketCtx &, uint32_t);
 
   private:

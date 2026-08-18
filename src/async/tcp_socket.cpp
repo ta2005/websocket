@@ -4,14 +4,13 @@
 
 namespace ws::async {
 
-TcpSocket::TcpSocket(int fd, EventLoop& loop) : m_fd(fd), m_loop(loop) {}
-
 ReadAwaitable TcpSocket::read_some(std::span<uint8_t> buffer) {
     return ReadAwaitable{*this, buffer, m_loop};
 }
 
-WaitWritable TcpSocket::wait_writable() {
-    return WaitWritable{*this, m_loop};
+WaitWritable TcpSocket::write_some(std::span<uint8_t> meta,
+                                   std::span<uint8_t> payload) {
+    return WaitWritable{*this, m_loop, meta, payload};
 }
 
 } // namespace ws::async

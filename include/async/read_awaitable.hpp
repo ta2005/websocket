@@ -26,9 +26,7 @@ struct ReadAwaitable {
         return true;      // Error occurred
     }
 
-    void await_suspend(Handle hd) {
-        loop.register_read(socket, hd);
-    }
+    void await_suspend(Handle hd) { loop.register_read(socket, hd); }
 
     ssize_t await_resume() {
         if (bytes_read > 0 || bytes_read == 0)

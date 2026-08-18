@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 #include "common/logger.hpp"
+#include "common/details/advance_iovec.hpp"
 #include "sync/tcp_socket.hpp"
 
 namespace ws {
@@ -111,17 +112,18 @@ std::expected<size_t, Error> TcpSocket::read(std::span<uint8_t> buf) const {
 std::expected<size_t, Error>
 TcpSocket::send(std::span<const uint8_t> meta_data,
                 std::span<const uint8_t> payload) const {
-    size_t       total_sent = 0;
-    size_t       total_size = meta_data.size() + payload.size();
-    struct iovec io[2];
+    size_t               total_sent = 0;
+    size_t               total_size = meta_data.size() + payload.size();
+    std::array<iovec, 2> io         = {{
 
-    io[0].iov_base =
-        const_cast<void *>(static_cast<const void *>(meta_data.data()));
-    io[0].iov_len = meta_data.size();
+        {.iov_base =
+             const_cast<void *>(static_cast<const void *>(meta_data.data())),
+         .iov_len = meta_data.size()},
 
-    io[1].iov_base =
-        const_cast<void *>(static_cast<const void *>(payload.data()));
-    io[1].iov_len = payload.size();
+        {.iov_base =
+             const_cast<void *>(static_cast<const void *>(payload.data())),
+         .iov_len = payload.size()},
+    }};
 
     int current_index = 0;
     int iovcnt        = 2;
@@ -138,28 +140,7 @@ TcpSocket::send(std::span<const uint8_t> meta_data,
             return std::unexpected(Error::WriteFailed);
         }
         total_sent += sent;
-
-        if (total_sent < total_size) {
-            // Adjust the iovec structs for the next partial write
-            if (total_sent >= meta_data.size() && current_index == 0) {
-                // The metadata buffer is fully sent, move onto the payload
-                // buffer
-                current_index       = 1;
-                iovcnt              = 1;
-                size_t payload_sent = total_sent - meta_data.size();
-                io[1].iov_base =
-                    static_cast<char *>(io[1].iov_base) + payload_sent;
-                io[1].iov_len -= payload_sent;
-            } else if (current_index == 0) {
-                // Still working on the metadata buffer
-                io[0].iov_base = static_cast<char *>(io[0].iov_base) + sent;
-                io[0].iov_len -= sent;
-            } else {
-                // Still working on the payload buffer
-                io[1].iov_base = static_cast<char *>(io[1].iov_base) + sent;
-                io[1].iov_len -= sent;
-            }
-        }
+	detail::advance_iovec(io,total_sent);
     }
     return total_sent;
 }

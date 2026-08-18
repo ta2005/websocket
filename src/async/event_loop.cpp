@@ -52,13 +52,13 @@ void EventLoop::register_socket(TcpSocket &socket) {
     ev.data.fd = fd;
 
     if (epoll_ctl(m_epollfd, EPOLL_CTL_ADD, fd, &ev) < 0) {
-        throw std::runtime_error("epoll_ctl add failed");
+        throw "epoll_ctl add failed";
     }
 }
 
 void EventLoop::run() {
     epoll_event events[64];
-    int nfds = epoll_wait(m_epollfd, events, 64, -1);
+    int         nfds = epoll_wait(m_epollfd, events, 64, -1);
     for (int i = 0; i < nfds; i++) {
         uint32_t revents = events[i].events;
         auto     fd      = events[i].data.fd;
