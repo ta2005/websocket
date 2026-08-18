@@ -3,8 +3,8 @@
 
 #include "common/details/parse_meta.hpp"
 #include "common/error.hpp"
-#include "simdutf.h"
 #include "common/status_code.hpp"
+#include "simdutf.h"
 #include <cassert>
 #include <cstdint>
 #include <expected>

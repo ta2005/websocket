@@ -1,14 +1,14 @@
 #include "async/event_loop.hpp"
-#include "async/socket_ctx.hpp"
-#include <stdexcept>
 #include <sys/epoll.h>
 #include <unistd.h>
 
 namespace ws::async {
 EventLoop::EventLoop() {
+    // I think this is the max theortical but I might be wrong
+    m_handles.resize(1 << 16);
     m_epollfd = epoll_create1(0);
     if (m_epollfd == -1) {
-        throw std::runtime_error("unable to create fd");
+        // throw std::runtime_error("unable to create fd");
     }
 }
 EventLoop::~EventLoop() {
@@ -22,6 +22,7 @@ EventLoop::EventLoop(EventLoop &&rhs) : m_epollfd(rhs.m_epollfd) {
 }
 
 EventLoop &EventLoop::operator=(EventLoop &&rhs) {
+    // I don't know about this one and wheter the vector will be dangling
     if (this != &rhs) {
         if (m_epollfd != -1) {
             close(m_epollfd);
@@ -29,58 +30,51 @@ EventLoop &EventLoop::operator=(EventLoop &&rhs) {
         this->m_epollfd = rhs.m_epollfd;
         rhs.m_epollfd   = -1;
     }
+    this->m_handles = std::move(rhs.m_handles);
+    rhs.m_handles.clear();
     return *this;
 }
 
-// this one should simply return a std::expection
-// but once again
-// it is exception it i can do epoll_ctl
-// like wtf am i supposed to do ?
-void EventLoop::register_socket(SocketCtx &ctx) {
-    epoll_event ev{};
-    ev.events   = EPOLLONESHOT|EPOLLET; // Crucial for one-shot notifications
-    ev.data.ptr = &ctx;
-
-    if (epoll_ctl(m_epollfd, EPOLL_CTL_ADD, ctx.fd, &ev) < 0) {
-        throw "3asba nr2 ";
-    }
+void EventLoop::register_read(TcpSocket &socket, Handle h) {
+    m_handles[socket.get_fd()].read_handle = h;
 }
 
-void EventLoop::rearm(SocketCtx &ctx, uint32_t events) {
-    ctx.events |= events;
-    epoll_event ev{};
-    ev.events   = ctx.events | EPOLLONESHOT|EPOLLET;
-    ev.data.ptr = &ctx;
+void EventLoop::register_write(TcpSocket &socket, Handle h) {
+    m_handles[socket.get_fd()].write_handle = h;
+}
 
-    // add error handling
-    epoll_ctl(m_epollfd, EPOLL_CTL_MOD, ctx.fd, &ev);
+void EventLoop::register_socket(TcpSocket &socket) {
+    epoll_event ev{};
+    // No EPOLLONESHOT needed for single-threaded EPOLLET!
+    // We register for IN, OUT, and RDHUP right from the start.
+    ev.events  = EPOLLET | EPOLLIN | EPOLLOUT | EPOLLRDHUP;
+    auto fd    = socket.get_fd();
+    ev.data.fd = fd;
+
+    if (epoll_ctl(m_epollfd, EPOLL_CTL_ADD, fd, &ev) < 0) {
+        throw std::runtime_error("epoll_ctl add failed");
+    }
 }
 
 void EventLoop::run() {
     epoll_event events[64];
-    int         nfds = epoll_wait(m_epollfd, events, 8, -1);
+    int nfds = epoll_wait(m_epollfd, events, 64, -1);
     for (int i = 0; i < nfds; i++) {
-        auto    *ctx     = static_cast<SocketCtx *>(events[i].data.ptr);
         uint32_t revents = events[i].events;
-	// this is somewhat coupled and even a bit 
-	// repetitive 
-	// maybe i could brush up one some template and 
-	// implement a compile time switch 
-	// stmt for 
-	// thing 
-	// but later 
-        if ((revents & (EPOLLIN | EPOLLHUP | EPOLLERR)) && ctx->read_handle) {
-            ctx->events &= ~EPOLLIN; // Disarmed by epoll
-            auto h           = ctx->read_handle;
-            ctx->read_handle = nullptr;
-            h.resume();
+        auto     fd      = events[i].data.fd;
+
+        if (revents & (EPOLLIN | EPOLLHUP | EPOLLERR | EPOLLRDHUP)) {
+            if (auto h = m_handles[fd].read_handle) {
+                m_handles[fd].read_handle = nullptr; // consume
+                h.resume();
+            }
         }
 
-        if ((revents & EPOLLOUT) && ctx->write_handle) {
-            ctx->events &= ~EPOLLOUT; // Disarmed by epoll
-            auto h            = ctx->write_handle;
-            ctx->write_handle = nullptr;
-            h.resume();
+        if (revents & EPOLLOUT) {
+            if (auto h = m_handles[fd].write_handle) {
+                m_handles[fd].write_handle = nullptr; // consume
+                h.resume();
+            }
         }
     }
 }

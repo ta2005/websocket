@@ -3,9 +3,9 @@
 #include "common/details/mask_payload.hpp"
 #include "common/details/prepare_meta.hpp"
 #include "common/error.hpp"
-#include "sync/handshake.hpp"
 #include "common/logger.hpp"
 #include "simdutf.h"
+#include "sync/handshake.hpp"
 #include <arpa/inet.h>
 
 namespace ws {
