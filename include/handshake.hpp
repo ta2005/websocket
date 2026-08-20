@@ -1,7 +1,6 @@
 #ifndef HANDSHAKE_HPP
 #define HANDSHAKE_HPP
 
-#include "io/tcp_socket.hpp"
 #include <string_view>
 #include <vector>
 

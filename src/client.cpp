@@ -31,72 +31,7 @@
 //     return c;
 // }
 //
-// std::expected<void, Error>
-// Client::send_control_frame(std::span<const uint8_t> payload, opcode op) {
-//     if (payload.size() > 125) {
-//         return std::unexpected(Error::InvalidPayloadLength);
-//     }
-//     return send_impl(payload, op);
-// }
 //
-// std::expected<void, Error> Client::send_impl(std::span<const uint8_t> msg,
-//                                              opcode first_op) {
-//     if (m_state != ConnectionState::Open) {
-//         return std::unexpected(Error::InvalidState);
-//     }
-//     bool                            first = true;
-//     std::array<uint8_t, chunk_size> tmp;
-//
-//     while (msg.size() > chunk_size) {
-//         // First frame gets the actual opcode, the rest get continuation
-//         (0x0) opcode op = first ? first_op : opcode::continuation;
-//
-//         uint32_t mask = m_rng();
-//         auto     meta = detail::format_meta(false, true, op, chunk_size,
-//         mask); std::copy(msg.begin(), msg.begin() + chunk_size, tmp.begin());
-//         mask_payload(tmp, mask);
-//
-//         ws::log::debug("Sending chunk of size {} bytes with opcode {}",
-//                        chunk_size, static_cast<int>(op));
-//         if (auto l = m_socket.send(meta.span(), tmp); !l) {
-//             // ws::log::error("Failed to send chunk: {}", l.error());
-//             return std::unexpected(l.error());
-//         }
-//         msg   = msg.subspan(chunk_size);
-//         first = false;
-//     }
-//
-//     opcode   op   = first ? first_op : opcode::continuation;
-//     uint32_t mask = m_rng();
-//     std::copy(msg.begin(), msg.begin() + msg.size(), tmp.begin());
-//     auto meta = detail::format_meta(true, true, op, msg.size(), mask);
-//     mask_payload(tmp, mask);
-//     // ws::log::debug("Sending final chunk of size {} bytes with opcode {}",
-//     //                msg.size(), static_cast<int>(op));
-//     if (auto l = m_socket.send(meta.span(), {tmp.data(), msg.size()}); !l) {
-//         // ws::log::error("Failed to send final chunk: {}", l.error());
-//         return std::unexpected(l.error());
-//     }
-//     return {};
-// }
-//
-// std::expected<void, Error> Client::send(std::span<const uint8_t> msg) {
-//     return send_impl(msg, opcode::binary);
-// }
-//
-// std::expected<void, Error> Client::send(const std::string_view msg) {
-//     if (!simdutf::validate_utf8(msg.data(), msg.size())) {
-//         return std::unexpected(Error::InvalidUTF8);
-//     }
-//     auto buf = std::span<const uint8_t>(
-//         reinterpret_cast<const uint8_t *>(msg.data()), msg.size());
-//     return send_impl(buf, opcode::text);
-// }
-//
-// std::expected<void, Error>
-// Client::send_close(std::span<const uint8_t> payload) {
-//     return send_control_frame(payload, opcode::close);
-// }
 //
 // std::expected<void, Error> Client::close(std::span<const uint8_t> payload) {
 //     if (m_state != ConnectionState::Open) {
@@ -109,10 +44,6 @@
 // // this should be an internal function of send control
 // // and then the dispatching happens with each one seding its own opcode
 // // and payload
-// std::expected<void, Error> Client::send_ping(std::span<const uint8_t>
-// payload) {
-//     return send_control_frame(payload, opcode::ping);
-// }
 //
 // void Client::fail_connection(status_code reason) {
 //     auto st = htons(static_cast<uint16_t>(reason));
@@ -125,10 +56,6 @@
 //     m_state = ConnectionState::Closed;
 // }
 //
-// std::expected<void, Error> Client::send_pong(std::span<const uint8_t>
-// payload) {
-//     return send_control_frame(payload, opcode::pong);
-// }
 //
 // std::expected<detail::PayloadMetaData, Error>
 // Client::read_header(size_t first_read) {

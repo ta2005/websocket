@@ -2,47 +2,81 @@
 #define TASK_HPP
 
 #include <coroutine>
+#include <exception>
+#include <optional>
 #include <utility>
 
 namespace ws {
-struct task {
+
+template <typename T> class Task {
+  public:
+    struct promise_type;
+    using Handle = std::coroutine_handle<promise_type>;
+
     struct promise_type {
-        void unhandled_exception() {}
-        void return_void() {} // Required when coroutine ends
+        std::optional<T>   value;
+        std::exception_ptr exception;
 
-        std::suspend_never initial_suspend() noexcept { return {}; }
-
-        task get_return_object() {
-            return task(
-                std::coroutine_handle<promise_type>::from_promise(*this));
+        Task get_return_object() noexcept {
+            return Task{Handle::from_promise(*this)};
         }
 
+        // Don't automatically run the coroutine.
+        std::suspend_always initial_suspend() noexcept { return {}; }
+
+        // The coroutine stays alive until the Task destroys it.
         std::suspend_always final_suspend() noexcept { return {}; }
+
+        void return_value(T v) noexcept { value = std::move(v); }
+
+        void unhandled_exception() noexcept {
+            exception = std::current_exception();
+        }
     };
 
-    using Handle = std::coroutine_handle<promise_type>;
-    Handle h_;
+    Task() noexcept = default;
 
-    explicit task(Handle h) : h_(h) {}
+    explicit Task(Handle h) noexcept : handle_(h) {}
 
-    ~task() {
-        if (h_)
-            h_.destroy();
+    ~Task() {
+        if (handle_)
+            handle_.destroy();
     }
 
-    task(const task &)            = delete;
-    task &operator=(const task &) = delete;
+    Task(const Task &)            = delete;
+    Task &operator=(const Task &) = delete;
 
-    task(task &&o) noexcept : h_(std::exchange(o.h_, nullptr)) {}
-    task &operator=(task &&o) noexcept {
-        if (this != &o) {
-            if (h_)
-                h_.destroy();
-            h_ = std::exchange(o.h_, nullptr);
+    Task(Task &&other) noexcept
+        : handle_(std::exchange(other.handle_, nullptr)) {}
+
+    Task &operator=(Task &&other) noexcept {
+        if (this != &other) {
+            if (handle_)
+                handle_.destroy();
+
+            handle_ = std::exchange(other.handle_, nullptr);
         }
+
         return *this;
     }
+
+    bool done() const noexcept { return !handle_ || handle_.done(); }
+
+    void resume() {
+        if (handle_ && !handle_.done())
+            handle_.resume();
+    }
+
+    T &result() {
+        if (handle_ && handle_.promise().exception)
+            std::rethrow_exception(handle_.promise().exception);
+
+        return *handle_.promise().value;
+    }
+
+  private:
+    Handle handle_{};
 };
 
 } // namespace ws
-#endif
+#endif // INCLUDE/home/talel/Programming/Projects/websock/includetasktask.hpp_

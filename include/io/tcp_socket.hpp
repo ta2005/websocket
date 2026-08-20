@@ -21,9 +21,14 @@ class TcpSocket {
     TcpSocket(const TcpSocket &)            = delete;
     TcpSocket &operator=(const TcpSocket &) = delete;
     ~TcpSocket();
-    void close() { ::close(m_fd); }
-    int  get_fd() const { return m_fd; }
-         operator bool() { return m_fd != -1; }
+    void close() {
+        if (m_fd != -1) {
+            ::close(m_fd);
+            m_fd = -1;
+        }
+    }
+    int get_fd() const { return m_fd; }
+        operator bool() { return m_fd != -1; }
     std::expected<size_t, Error>
     send(const std::span<const uint8_t> meta_data,
          const std::span<const uint8_t> payload) const;

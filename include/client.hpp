@@ -2,12 +2,14 @@
 #define CLIENT_HPP
 
 #include "common/concepts.hpp"
-#include "common/details/advance_span.hpp"
+#include "common/details/advance_spans.hpp"
 #include "common/details/chunk_formatter.hpp"
+#include "common/details/dispatch.hpp"
 #include "common/details/parse_meta.hpp"
 #include "common/opcode.hpp"
 #include "simdutf.h"
 #include "task.hpp"
+#include <cstdint>
 #include <random>
 #include <string_view>
 #include <vector>
@@ -27,54 +29,51 @@ struct Message {
     opcode               type;
 };
 
-template <typename AsyncFn, typename SyncFn>
-static decltype(auto) dispatch(AsyncFn &&async_fn, SyncFn &&sync_fn) {
-    if constexpr (isAsyncSocket<Socket>) {
-        return async_fn();
-    } else {
-        return sync_fn();
+enum class ConnectionState { Open, Closing, Closed };
+
+// Pure validation, no I/O, no buffer mutation — shared by both branches
+// of read_header. Note: does NOT erase anything from the buffer anymore;
+// that's now deferred (see read_header/read_payload below).
+inline std::expected<detail::PayloadMetaData, Error>
+finalize(detail::PayloadMetaData meta) {
+    if (meta.is_masked) {
+        return std::unexpected(Error::UnmaskedServerPayload);
     }
+    if (is_control(meta.op) && !meta.fin) {
+        return std::unexpected(Error::NonFinControlFrame);
+    }
+    if (is_control(meta.op) && meta.len > 125) {
+        return std::unexpected(Error::InvalidPayloadLength);
+    }
+    return meta;
 }
 
-enum class ConnectionState { Open, Closing, Closed };
 template <typename Socket> class Client {
   private:
     Socket       m_socket;
     std::mt19937 m_rng;
     struct ReadSate {
         std::vector<uint8_t> data;
-        size_t               remaing_bytes;
+        size_t               remaing_bytes = 0; // was uninitialized before
     } current_read;
 
     ConnectionState m_state = ConnectionState::Open;
 
     Client(Socket s) : m_socket(std::move(s)), m_rng(std::random_device{}()) {};
+
     decltype(auto) send_impl(std::span<const uint8_t>, opcode);
-    //
-    // std::expected<void, Error>      send_control_frame(std::span<const
-    // uint8_t>,
-    //                                                    opcode);
-    // std::expected<ChunkView, Error> read_chunk_impl(size_t);
-    // std::expected<detail::PayloadMetaData, Error> read_header(size_t);
-    // std::expected<detail::PayloadMetaData, Error>
-    //                            read_payload(detail::PayloadMetaData);
-    // std::expected<void, Error> send_close(std::span<const uint8_t>);
-    // void                       fail_connection(status_code reason);
+    decltype(auto) send_control_frame(std::span<const uint8_t>, opcode);
+    decltype(auto) read_header(size_t);
+    decltype(auto) read_payload(detail::PayloadMetaData);
+    decltype(auto) send_close(std::span<const uint8_t>);
+    void           consume_leftover_buffer();
 
   public:
+    decltype(auto) read_chunk();
     decltype(auto) send(std::span<const uint8_t>);
     decltype(auto) send(const std::string_view);
-    // std::expected<void, Error> send_ping(std::span<const uint8_t>);
-    // std::expected<void, Error> send_pong(std::span<const uint8_t>);
-    // // next major update this will need to be and enum with an explanation
-    // std::expected<void, Error>      close(std::span<const uint8_t>);
-    // std::expected<ChunkView, Error> read_chunk();
-    // std::expected<Message, Error>   read_message(
-    //     size_t max_size = 100 * 1024 * 1024); // 100MB limit to prevent OOM
-    // this one should be uri
-    // static std::expected<Client, Error>
-    // create(const std::string_view host, const std::string_view path,
-    //        const std::string_view port = "80");
+    decltype(auto) send_ping(std::span<const uint8_t>);
+    decltype(auto) send_pong(std::span<const uint8_t>);
 };
 
 template <typename Socket>
@@ -101,44 +100,223 @@ decltype(auto) Client<Socket>::send(const std::string_view msg) {
 template <typename Socket>
 decltype(auto) Client<Socket>::send_impl(std::span<const uint8_t> msg,
                                          opcode                   first_op) {
-    dispatch(
+    return detail::dispatch<Socket>(
         [this, msg, first_op]() -> Task<std::expected<void, Error>> {
-            if (m_state != ConnectionState::open) {
+            if (m_state != ConnectionState::Open) {
                 co_return std::unexpected(Error::InvalidState);
             }
-            detail::ChunkFormatter fmt{msg, first_op, c.m_rng};
+            detail::ChunkFormatter fmt{msg, first_op, m_rng};
             while (fmt.has_next()) {
                 auto [meta, payload] = fmt.next();
-
-                while (!meta.empty() || !payload.empty()) {
-                    auto n = co_await m_socket.write(meta, payload);
+                auto metas           = meta.span();
+                while (!(metas).empty() || !payload.empty()) {
+                    auto n = co_await m_socket.write(metas, payload);
                     if (!n) {
                         co_return std::unexpected(n.error());
                     }
-                    detail::advance_span(meta, payload, *n);
+                    detail::advance_span(metas, payload, *n);
                 }
             }
-            co_return {};
+            co_return std::expected<void, Error>{};
         },
         [this, msg, first_op]() -> std::expected<void, Error> {
-            if (m_state != ConnectionState::open) {
+            if (m_state != ConnectionState::Open) {
                 return std::unexpected(Error::InvalidState);
             }
             detail::ChunkFormatter fmt{msg, first_op, m_rng};
             while (fmt.has_next()) {
                 auto [meta, payload] = fmt.next();
-
-                while (!meta.empty() || !payload.empty()) {
-                    auto n = m_socket.write(meta, payload);
+                auto metas           = meta.span();
+                while (!(metas).empty() || !payload.empty()) {
+                    auto n = m_socket.write(metas, payload);
                     if (!n) {
                         return std::unexpected(n.error());
                     }
-                    detail::advance_span(meta, payload, *n);
+                    detail::advance_span(metas, payload, *n);
                 }
             }
             return {};
-        })
+        });
 }
+
+template <typename Socket>
+decltype(auto)
+Client<Socket>::send_control_frame(std::span<const uint8_t> payload,
+                                   opcode                   op) {
+    if (payload.size() > 125) {
+        if constexpr (isAsyncSocket<Socket>) {
+            return [](Error err) -> Task<std::expected<void, Error>> {
+                co_return std::unexpected(err);
+            }(Error::InvalidPayloadLength);
+        } else {
+            return std::unexpected(Error::InvalidPayloadLength);
+        }
+    }
+    return send_impl(payload, op);
+}
+
+template <typename Socket>
+decltype(auto) Client<Socket>::send_pong(std::span<const uint8_t> payload) {
+    return send_control_frame(payload, opcode::pong);
+}
+
+template <typename Socket>
+decltype(auto) Client<Socket>::send_ping(std::span<const uint8_t> payload) {
+    return send_control_frame(payload, opcode::ping);
+}
+
+template <typename Socket>
+decltype(auto) Client<Socket>::send_close(std::span<const uint8_t> payload) {
+    return send_control_frame(payload, opcode::close);
+}
+
+template <typename Socket>
+decltype(auto) Client<Socket>::read_header(size_t first_read) {
+    return detail::dispatch<Socket>(
+        // --- ASYNC PATH ---
+        [this,
+         first_read]() -> Task<std::expected<detail::PayloadMetaData, Error>> {
+            auto &buffer      = current_read.data;
+            auto  parsed_meta = detail::parse_meta({buffer.data(), first_read});
+
+            while (!parsed_meta) {
+                if (parsed_meta.error() != Error::PayloadTooShort) {
+                    co_return std::unexpected(parsed_meta.error());
+                }
+                std::array<uint8_t, chunk_size> tmp;
+                auto                            read_size =
+                    co_await m_socket.read_some({tmp.data(), tmp.size()});
+                if (!read_size) {
+                    co_return std::unexpected(read_size.error());
+                }
+                buffer.insert(buffer.end(), tmp.begin(),
+                              tmp.begin() + *read_size);
+                parsed_meta =
+                    detail::parse_meta({buffer.data(), buffer.size()});
+            }
+            // Erase deferred: we no longer trim the header here. Instead we
+            // stash its size so read_payload can add its own length on top,
+            // and the *next* read_chunk() erases header+payload together
+            // in one shot, right before it needs a clean buffer to parse
+            // the following frame's header from offset 0.
+            current_read.remaing_bytes = parsed_meta->meta_size;
+            co_return finalize(*parsed_meta);
+        },
+
+        // --- SYNC PATH ---
+        [this, first_read]() -> std::expected<detail::PayloadMetaData, Error> {
+            auto &buffer      = current_read.data;
+            auto  parsed_meta = detail::parse_meta({buffer.data(), first_read});
+
+            while (!parsed_meta) {
+                if (parsed_meta.error() != Error::PayloadTooShort) {
+                    return std::unexpected(parsed_meta.error());
+                }
+                std::array<uint8_t, chunk_size> tmp;
+                auto read_size = m_socket.read_some({tmp.data(), tmp.size()});
+                if (!read_size) {
+                    return std::unexpected(read_size.error());
+                }
+                buffer.insert(buffer.end(), tmp.begin(),
+                              tmp.begin() + *read_size);
+                parsed_meta =
+                    detail::parse_meta({buffer.data(), buffer.size()});
+            }
+            current_read.remaing_bytes = parsed_meta->meta_size;
+            return finalize(*parsed_meta);
+        });
+}
+
+template <typename Socket>
+decltype(auto) Client<Socket>::read_payload(detail::PayloadMetaData meta) {
+    return detail::dispatch<Socket>(
+        // --- ASYNC PATH ---
+        [this, meta]() -> Task<std::expected<void, Error>> {
+            auto &buffer = current_read.data;
+            // Buffer still holds the un-erased header (meta.meta_size bytes)
+            // up front, plus whatever payload bytes already arrived as
+            // leftover from the initial bulk read. Subtract the header off
+            // to get how much *payload* is already sitting in the buffer.
+            size_t total_read = buffer.size() - meta.meta_size;
+
+            while (total_read < meta.len) {
+                std::array<uint8_t, chunk_size> tmp;
+                auto                            read_size =
+                    co_await m_socket.read_some({tmp.data(), tmp.size()});
+                if (!read_size) {
+                    co_return std::unexpected(read_size.error());
+                }
+                buffer.insert(buffer.end(), tmp.begin(),
+                              tmp.begin() + *read_size);
+                total_read += *read_size;
+            }
+            // remaing_bytes now covers header + full payload for this
+            // frame — the single deferred erase, next read_chunk() call.
+            current_read.remaing_bytes += meta.len;
+            co_return std::expected<void, Error>{};
+        },
+
+        // --- SYNC PATH ---
+        [this, meta]() -> std::expected<void, Error> {
+            auto  &buffer     = current_read.data;
+            size_t total_read = buffer.size() - meta.meta_size;
+
+            while (total_read < meta.len) {
+                std::array<uint8_t, chunk_size> tmp;
+                auto read_size = m_socket.read_some({tmp.data(), tmp.size()});
+                if (!read_size) {
+                    return std::unexpected(read_size.error());
+                }
+                buffer.insert(buffer.end(), tmp.begin(),
+                              tmp.begin() + *read_size);
+                total_read += *read_size;
+            }
+            current_read.remaing_bytes += meta.len;
+            return {};
+        });
+}
+
+template <typename T> void Client<T>::consume_leftover_buffer() {
+    auto &buffer = current_read.data;
+    if (current_read.remaing_bytes > 0 &&
+        current_read.remaing_bytes <= buffer.size()) {
+        buffer.erase(buffer.begin(),
+                     buffer.begin() + current_read.remaing_bytes);
+        current_read.remaing_bytes = 0;
+    }
+}
+
+template <typename Socket> decltype(auto) Client<Socket> read_chunk() {
+    return detail::dispatch(
+        [this]() -> Task<std::expected<ChunkView, Error>> {
+            consume_leftover_buffer();
+            if (!buffer.empty()) {
+                co_return read_chunk_impl(buffer.size());
+            }
+            buffer.resize(chunk_size);
+            auto        first_read =
+                coawait m_socket.read({buffer.data(), buffer.size()});
+            if (!first_read) {
+                co_return std::unexpected(first_read.error());
+            }
+            buffer.resize(*first_read);
+            co_return read_chunk_impl(*first_read);
+        },
+        [this]() -> std::expected<ChunkView, Error> {
+            consume_leftover_buffer();
+            if (!buffer.empty()) {
+                return read_chunk_impl(buffer.size());
+            }
+            buffer.resize(chunk_size);
+            auto first_read = m_socket.read({buffer.data(), buffer.size()});
+            if (!first_read) {
+                return std::unexpected(first_read.error());
+            }
+            buffer.resize(*first_read);
+            return read_chunk_impl(*first_read);
+        });
+}
+
 } // namespace ws
 
 #endif

@@ -6,17 +6,11 @@
 #include <sys/uio.h>
 #include <unistd.h>
 
-#include "common/details/advance_iovec.hpp"
-#include "common/logger.hpp"
 #include "io/tcp_socket.hpp"
 
 namespace ws {
-TcpSocket::~TcpSocket() {
-    if (m_fd != -1) {
-        close();
-        m_fd = -1;
-    }
-}
+TcpSocket::~TcpSocket() { close(); }
+
 std::expected<TcpSocket, Error>
 TcpSocket::connect(const std::string_view host, const std::string_view port) {
     addrinfo *res = NULL;
@@ -25,7 +19,6 @@ TcpSocket::connect(const std::string_view host, const std::string_view port) {
     hints.ai_socktype = SOCK_STREAM;
     if (int result = getaddrinfo(host.data(), port.data(), &hints, &res);
         result != 0) {
-        ws::log::error("getaddrinfo failed: {}", gai_strerror(result));
         return std::unexpected(Error::ConnectionClosed);
     }
     int socketfd = -1;
@@ -35,13 +28,10 @@ TcpSocket::connect(const std::string_view host, const std::string_view port) {
             continue;
         }
         if (::connect(socketfd, p->ai_addr, p->ai_addrlen) == -1) {
-            ws::log::error("Failed to connect to {}:{} using protocol {}", host,
-                           port, p->ai_protocol);
             ::close(socketfd);
             socketfd = -1;
             continue;
         }
-        ws::log::info("Successfully connected to {}:{}", host, port);
         break;
     }
     freeaddrinfo(res);
@@ -67,7 +57,6 @@ std::expected<size_t, Error> TcpSocket::read(std::span<uint8_t> buf) const {
         if (bytes_read < 0) {
             if (errno == EINTR)
                 continue; // Interrupted by signal, try again
-            ws::log::error("TcpSocket::read error: {}", std::strerror(errno));
             // This seems pretty stupid
             // why don't i handle would block or again?
             return std::unexpected(Error::ReadFailed);
@@ -105,8 +94,6 @@ TcpSocket::send(std::span<const uint8_t> meta_data,
         if (sent < 0) {
             if (errno == EINTR)
                 continue;
-            ws::log::error("TcpSocket::send (writev) error: {}",
-                           std::strerror(errno));
             return std::unexpected(Error::WriteFailed);
         }
         return sent;

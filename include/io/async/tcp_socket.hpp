@@ -38,6 +38,7 @@ class TcpSocket {
     TcpSocket &operator=(TcpSocket &&other) noexcept;
 
     auto get_fd() const { return m_fd; }
+    void close();
 
     ReadAwaitable   read(std::span<uint8_t> buffer);
     WaitWritable    write(std::span<uint8_t> meta, std::span<uint8_t> payload);
