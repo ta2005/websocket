@@ -24,15 +24,11 @@ class TcpSocket {
     void close() { ::close(m_fd); }
     int  get_fd() const { return m_fd; }
          operator bool() { return m_fd != -1; }
-    // i don't maybe i will change the interface later
-    std::expected<size_t, Error> send(const std::span<const uint8_t>) const;
-    std::expected<size_t, Error> send(const std::string_view) const;
     std::expected<size_t, Error>
     send(const std::span<const uint8_t> meta_data,
          const std::span<const uint8_t> payload) const;
     std::expected<size_t, Error> send(const std::span<const uint8_t> meta_data,
                                       std::string_view payload) const;
-    std::string                  read(int max_len) const;
     std::expected<size_t, Error> read(std::span<uint8_t> buf) const;
     // I think i can return std::string as the getaddrinfo strings
     // are statically allocated but further testing is needed

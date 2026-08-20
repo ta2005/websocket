@@ -17,7 +17,7 @@ EventLoop::~EventLoop() {
 std::expected<EventLoop, Error> EventLoop::create() {
     int epollfd = epoll_create1(0);
     if (epollfd == -1) {
-        return std::unexpected(Error.EventLoopInitFailed);
+        return std::unexpected(ws::Error::EventLoopInitFailed);
     }
     return EventLoop(epollfd);
 }
@@ -62,8 +62,9 @@ std::expected<void, Error> EventLoop::register_socket(TcpSocket &socket) {
     ev.data.fd = fd;
 
     if (epoll_ctl(m_epollfd, EPOLL_CTL_ADD, fd, &ev) < 0) {
-        return std::unexpected(Error.ReadFailed);
+        return std::unexpected(ws::Error::ReadFailed);
     }
+    return {};
 }
 
 void EventLoop::run() {

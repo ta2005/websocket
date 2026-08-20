@@ -8,7 +8,7 @@
 
 #include "common/details/advance_iovec.hpp"
 #include "common/logger.hpp"
-#include "sync/tcp_socket.hpp"
+#include "io/tcp_socket.hpp"
 
 namespace ws {
 TcpSocket::~TcpSocket() {
@@ -57,37 +57,6 @@ TcpSocket &TcpSocket::operator=(TcpSocket &&other) {
         other.m_fd = -1;
     }
     return *this;
-}
-// both of these functions are shit
-// but they do the job
-std::expected<size_t, Error>
-TcpSocket::send(std::span<const uint8_t> data) const {
-    size_t total_sent = 0;
-    while (total_sent < data.size()) {
-        ssize_t sent =
-            ::write(m_fd, data.data() + total_sent, data.size() - total_sent);
-        if (sent < 0) {
-            if (errno == EINTR)
-                continue; // Interrupted by signal, try again
-            ws::log::error("TcpSocket::send error: {}", std::strerror(errno));
-            return std::unexpected(Error::ConnectionFailed);
-        }
-        total_sent += sent;
-    }
-    return total_sent;
-}
-
-std::expected<size_t, Error> TcpSocket::send(const std::string_view buf) const {
-    auto bytes = std::span<const uint8_t>(
-        reinterpret_cast<const uint8_t *>(buf.data()), buf.size());
-    return send(bytes);
-}
-
-std::string TcpSocket::read(int max_len) const {
-    std::string s;
-    s.resize(max_len);
-    ::read(m_fd, s.data(), max_len);
-    return s;
 }
 
 std::expected<size_t, Error> TcpSocket::read(std::span<uint8_t> buf) const {

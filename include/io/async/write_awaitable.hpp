@@ -1,8 +1,8 @@
 #ifndef WRITEV_AWAITABLE_HPP
 #define WRITEV_AWAITABLE_HPP
 
-#include "async/event_loop.hpp"
-#include "async/tcp_socket.hpp"
+#include "io/async/event_loop.hpp"
+#include "io/async/tcp_socket.hpp"
 #include <array>
 #include <cerrno>
 #include <sys/epoll.h>
