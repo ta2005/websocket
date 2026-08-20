@@ -1,8 +1,10 @@
 #ifndef EVENT_LOOP_HPP
 #define EVENT_LOOP_HPP
 
-#include "tcp_socket.hpp"
+#include "common/error.hpp"
+#include "io/async/tcp_socket.hpp"
 #include <coroutine>
+#include <expected>
 #include <sys/epoll.h>
 #include <vector>
 using Handle = std::coroutine_handle<>;
@@ -14,26 +16,26 @@ struct SocketCtx {
 };
 class EventLoop {
   public:
-    EventLoop();
     EventLoop(EventLoop &)            = delete;
     EventLoop &operator=(EventLoop &) = delete;
     EventLoop(EventLoop &&);
     ~EventLoop();
-    EventLoop &operator=(EventLoop &&);
+    EventLoop                      &operator=(EventLoop &&);
+    std::expected<EventLoop, Error> create();
 
     void run();
-    auto get_fd(){
-	return m_epollfd;
-    }
+    auto get_fd() { return m_epollfd; }
 
     // this will change when i create the
     // tcp class
-    void register_socket(TcpSocket &);
-    void register_read(TcpSocket &, Handle);
-    void register_write(TcpSocket &, Handle);
+    std::expected<void, Error> register_socket(TcpSocket &);
+    void                       unregister_socket(TcpSocket &);
+    void                       register_read(TcpSocket &, Handle);
+    void                       register_write(TcpSocket &, Handle);
     // void rearm(SocketCtx &, uint32_t);
 
   private:
+    EventLoop(int fd);
     int m_epollfd;
     // this could also take an unordered map
     // of tcpsocket

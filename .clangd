@@ -3,10 +3,11 @@ CompileFlags:
     - -Wall
     - -Wextra
     - -Wshadow
-    - -I
-    - /home/talel/Programming/Projects/websock/include
-    - -I
-    - /home/talel/Programming/Projects/websock/vendor
+    - -I/home/talel/Programming/Projects/websock/include
+    - -I/home/talel/Programming/Projects/websock/include/io
+    - -I/home/talel/Programming/Projects/websock/include/io/async
+    - -I/home/talel/Programming/Projects/websock/include/common
+    - -I/home/talel/Programming/Projects/websock/include/common/details
     - "-fsanitize=address,undefined"
     - -std=c++23
   Compiler: g++

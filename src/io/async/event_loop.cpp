@@ -1,20 +1,25 @@
-#include "async/event_loop.hpp"
+#include "io/async/event_loop.hpp"
 #include <sys/epoll.h>
 #include <unistd.h>
 
 namespace ws::async {
-EventLoop::EventLoop() {
+EventLoop::EventLoop(int fd) : m_epollfd{fd} {
     // I think this is the max theortical but I might be wrong
     m_handles.resize(1 << 16);
-    m_epollfd = epoll_create1(0);
-    if (m_epollfd == -1) {
-        // throw std::runtime_error("unable to create fd");
-    }
 }
 EventLoop::~EventLoop() {
     if (m_epollfd != -1) {
         close(m_epollfd);
+        m_epollfd = -1;
     }
+}
+
+std::expected<EventLoop, Error> EventLoop::create() {
+    int epollfd = epoll_create1(0);
+    if (epollfd == -1) {
+        return std::unexpected(Error.EventLoopInitFailed);
+    }
+    return EventLoop(epollfd);
 }
 
 EventLoop::EventLoop(EventLoop &&rhs) : m_epollfd(rhs.m_epollfd) {
@@ -35,6 +40,11 @@ EventLoop &EventLoop::operator=(EventLoop &&rhs) {
     return *this;
 }
 
+void EventLoop::unregister_socket(TcpSocket &socket) {
+    m_handles[socket.get_fd()].read_handle  = nullptr;
+    m_handles[socket.get_fd()].write_handle = nullptr;
+}
+
 void EventLoop::register_read(TcpSocket &socket, Handle h) {
     m_handles[socket.get_fd()].read_handle = h;
 }
@@ -43,7 +53,7 @@ void EventLoop::register_write(TcpSocket &socket, Handle h) {
     m_handles[socket.get_fd()].write_handle = h;
 }
 
-void EventLoop::register_socket(TcpSocket &socket) {
+std::expected<void, Error> EventLoop::register_socket(TcpSocket &socket) {
     epoll_event ev{};
     // No EPOLLONESHOT needed for single-threaded EPOLLET!
     // We register for IN, OUT, and RDHUP right from the start.
@@ -52,7 +62,7 @@ void EventLoop::register_socket(TcpSocket &socket) {
     ev.data.fd = fd;
 
     if (epoll_ctl(m_epollfd, EPOLL_CTL_ADD, fd, &ev) < 0) {
-        throw "epoll_ctl add failed";
+        return std::unexpected(Error.ReadFailed);
     }
 }
 

@@ -30,10 +30,10 @@ enum class Error {
     PayloadTooShort,
     NonFinControlFrame,
     UnsupporOpcode,
-    // should server be 
+    // should server be
     // a class of it's own???
-    // should it and it's constrocot 
-    // calls to bind and listen 
+    // should it and it's constrocot
+    // calls to bind and listen
     // I should also then have a client class
     // where i can then store the data retruned but socket
     UnsupportedExtension, // RSV bits set without negotiation
@@ -46,7 +46,8 @@ enum class Error {
     ProtocolError,          // Generic protocol violation
     InvalidState,
     // Async
-    EventLoopInitFailed
+    EventLoopInitFailed,
+    RegisterFailed,
 };
 
 constexpr status_code get_status_code(Error e) {

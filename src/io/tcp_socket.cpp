@@ -6,15 +6,15 @@
 #include <sys/uio.h>
 #include <unistd.h>
 
-#include "common/logger.hpp"
 #include "common/details/advance_iovec.hpp"
+#include "common/logger.hpp"
 #include "sync/tcp_socket.hpp"
 
 namespace ws {
 TcpSocket::~TcpSocket() {
     if (m_fd != -1) {
         close();
-	m_fd=-1;
+        m_fd = -1;
     }
 }
 std::expected<TcpSocket, Error>
@@ -141,7 +141,7 @@ TcpSocket::send(std::span<const uint8_t> meta_data,
             return std::unexpected(Error::WriteFailed);
         }
         total_sent += sent;
-	detail::advance_iovec(io,total_sent);
+        detail::advance_iovec(io, total_sent);
     }
     return total_sent;
 }

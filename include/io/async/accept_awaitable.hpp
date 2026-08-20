@@ -12,9 +12,9 @@
 
 namespace ws::async {
 struct AcceptAwaitable {
-    TcpSocket& server;
+    TcpSocket &server;
     EventLoop &loop;
-    int        c_fd=-1;
+    int        c_fd = -1;
     bool       await_ready() {
         c_fd = ::accept4(server.get_fd(), NULL, NULL, SOCK_NONBLOCK);
         if (c_fd >= 0)
