@@ -22,12 +22,16 @@ class EventLoop {
     EventLoop &operator=(EventLoop &&);
 
     void run();
+    auto get_fd(){
+	return m_epollfd;
+    }
 
     // this will change when i create the
     // tcp class
     void register_socket(TcpSocket &);
     void register_read(TcpSocket &, Handle);
     void register_write(TcpSocket &, Handle);
+    void register_accpet(TcpSocket&,Handle h);
     // void rearm(SocketCtx &, uint32_t);
 
   private:

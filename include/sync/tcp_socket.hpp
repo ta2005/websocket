@@ -16,7 +16,6 @@ class TcpSocket {
     TcpSocket(int fd) : m_fd{fd} {}
 
   public:
-    TcpSocket(const std::string_view host, const std::string_view port);
     TcpSocket(TcpSocket &&);
     TcpSocket &operator=(TcpSocket &&);
     TcpSocket(const TcpSocket &)            = delete;

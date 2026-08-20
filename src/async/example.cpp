@@ -148,4 +148,5 @@ int main() {
     }
 
     return 0;
+    size_t               total_size = meta_data.size() + payload.size();
 }
