@@ -16,63 +16,59 @@ template <typename T> class Task {
     struct promise_type {
         std::optional<T>   value;
         std::exception_ptr exception;
+        std::coroutine_handle<> continuation;
 
         Task get_return_object() noexcept {
             return Task{Handle::from_promise(*this)};
         }
 
-        // Don't automatically run the coroutine.
         std::suspend_always initial_suspend() noexcept { return {}; }
 
-        // The coroutine stays alive until the Task destroys it.
-        std::suspend_always final_suspend() noexcept { return {}; }
+        struct FinalAwaiter {
+            bool await_ready() const noexcept { return false; }
+            std::coroutine_handle<> await_suspend(Handle h) noexcept {
+                return h.promise().continuation ? h.promise().continuation : std::noop_coroutine();
+            }
+            void await_resume() const noexcept {}
+        };
+
+        FinalAwaiter final_suspend() noexcept { return {}; }
 
         void return_value(T v) noexcept { value = std::move(v); }
-
-        void unhandled_exception() noexcept {
-            exception = std::current_exception();
-        }
+        void unhandled_exception() noexcept { exception = std::current_exception(); }
     };
 
     Task() noexcept = default;
-
     explicit Task(Handle h) noexcept : handle_(h) {}
+    ~Task() { if (handle_) handle_.destroy(); }
 
-    ~Task() {
-        if (handle_)
-            handle_.destroy();
-    }
-
-    Task(const Task &)            = delete;
+    Task(const Task &) = delete;
     Task &operator=(const Task &) = delete;
 
-    Task(Task &&other) noexcept
-        : handle_(std::exchange(other.handle_, nullptr)) {}
-
+    Task(Task &&other) noexcept : handle_(std::exchange(other.handle_, nullptr)) {}
     Task &operator=(Task &&other) noexcept {
         if (this != &other) {
-            if (handle_)
-                handle_.destroy();
-
+            if (handle_) handle_.destroy();
             handle_ = std::exchange(other.handle_, nullptr);
         }
-
         return *this;
     }
 
-    bool done() const noexcept { return !handle_ || handle_.done(); }
+    // --- AWAITABLE INTERFACE ---
+    bool await_ready() const noexcept { return !handle_ || handle_.done(); }
 
-    void resume() {
-        if (handle_ && !handle_.done())
-            handle_.resume();
+    std::coroutine_handle<> await_suspend(std::coroutine_handle<> caller) noexcept {
+        handle_.promise().continuation = caller;
+        return handle_; // Symmetric transfer: suspends caller and resumes this task immediately!
     }
 
-    T &result() {
-        if (handle_ && handle_.promise().exception)
+    T await_resume() {
+        if (handle_.promise().exception)
             std::rethrow_exception(handle_.promise().exception);
-
-        return *handle_.promise().value;
+        return std::move(*handle_.promise().value);
     }
+
+    bool done() const noexcept { return !handle_ || handle_.done(); }
 
   private:
     Handle handle_{};
