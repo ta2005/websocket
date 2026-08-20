@@ -12,6 +12,7 @@ struct StatusLine {
     int         status;
     std::string reason;
 };
+
 struct HandskaheResult {
     StatusLine           line;
     std::string          accept_key;

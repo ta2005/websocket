@@ -14,6 +14,7 @@ namespace ws {
 TcpSocket::~TcpSocket() {
     if (m_fd != -1) {
         close();
+	m_fd=-1;
     }
 }
 std::expected<TcpSocket, Error>
