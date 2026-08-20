@@ -30,12 +30,12 @@ TcpSocket &TcpSocket::operator=(TcpSocket &&other) noexcept {
     return *this;
 }
 
-ReadAwaitable TcpSocket::read_some(std::span<uint8_t> buffer) {
+ReadAwaitable TcpSocket::read(std::span<uint8_t> buffer) {
     return ReadAwaitable{*this, buffer, m_loop};
 }
 
-WaitWritable TcpSocket::write_some(std::span<uint8_t> meta,
-                                   std::span<uint8_t> payload) {
+WaitWritable TcpSocket::write(std::span<uint8_t> meta,
+                              std::span<uint8_t> payload) {
     return WaitWritable{*this, m_loop, meta, payload};
 }
 

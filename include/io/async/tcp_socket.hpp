@@ -39,9 +39,8 @@ class TcpSocket {
 
     auto get_fd() const { return m_fd; }
 
-    ReadAwaitable   read_some(std::span<uint8_t> buffer);
-    WaitWritable    write_some(std::span<uint8_t> meta,
-                               std::span<uint8_t> payload);
+    ReadAwaitable   read(std::span<uint8_t> buffer);
+    WaitWritable    write(std::span<uint8_t> meta, std::span<uint8_t> payload);
     AcceptAwaitable accept();
 };
 } // namespace ws::async

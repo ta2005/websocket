@@ -4,7 +4,7 @@
 #include <coroutine>
 #include <utility>
 
-namespace ws::async {
+namespace ws {
 struct task {
     struct promise_type {
         void unhandled_exception() {}
@@ -44,5 +44,5 @@ struct task {
     }
 };
 
-} // namespace ws::async
+} // namespace ws
 #endif
