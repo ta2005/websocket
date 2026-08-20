@@ -1,5 +1,5 @@
 CompileFlags:
-  Compiler: g++
+  Compiler: /usr/bin/g++
   Add:
     - -Wall
     - -Wextra

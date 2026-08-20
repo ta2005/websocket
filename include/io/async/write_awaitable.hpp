@@ -1,6 +1,7 @@
 #ifndef WRITEV_AWAITABLE_HPP
 #define WRITEV_AWAITABLE_HPP
 
+#include "common/error.hpp"
 #include "io/async/event_loop.hpp"
 #include "io/async/tcp_socket.hpp"
 #include <array>
@@ -37,11 +38,15 @@ struct WaitWritable {
 
     void await_suspend(Handle hd) { loop.register_write(socket, hd); }
 
-    ssize_t await_resume() {
+    std::expected<size_t, Error> await_resume() {
         if (bytes_sent > 0 || bytes_sent == 0)
             return bytes_sent;
         // Epoll woke us up, read now!
-        return bytes_sent = ::writev(socket.get_fd(), io.data(), io.size());
+        bytes_sent = writev(socket.get_fd(), io.data(), io.size());
+        if (bytes_sent < 0) {
+            return std::unexpected(Error::ConnectionFailed);
+        }
+        return bytes_sent;
     }
 };
 

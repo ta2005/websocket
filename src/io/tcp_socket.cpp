@@ -59,6 +59,8 @@ TcpSocket &TcpSocket::operator=(TcpSocket &&other) {
     return *this;
 }
 
+// I should expect the same interface for both
+// that is why i will simply it to become a single loop
 std::expected<size_t, Error> TcpSocket::read(std::span<uint8_t> buf) const {
     while (true) {
         ssize_t bytes_read = ::read(m_fd, buf.data(), buf.size());
@@ -66,6 +68,8 @@ std::expected<size_t, Error> TcpSocket::read(std::span<uint8_t> buf) const {
             if (errno == EINTR)
                 continue; // Interrupted by signal, try again
             ws::log::error("TcpSocket::read error: {}", std::strerror(errno));
+            // This seems pretty stupid
+            // why don't i handle would block or again?
             return std::unexpected(Error::ReadFailed);
         }
         if (bytes_read == 0) {
@@ -82,9 +86,8 @@ std::expected<size_t, Error> TcpSocket::read(std::span<uint8_t> buf) const {
 std::expected<size_t, Error>
 TcpSocket::send(std::span<const uint8_t> meta_data,
                 std::span<const uint8_t> payload) const {
-    size_t               total_sent = 0;
-    size_t               total_size = meta_data.size() + payload.size();
-    std::array<iovec, 2> io         = {{
+    // this function basically tries to send it all
+    std::array<iovec, 2> io = {{
 
         {.iov_base =
              const_cast<void *>(static_cast<const void *>(meta_data.data())),
@@ -95,13 +98,10 @@ TcpSocket::send(std::span<const uint8_t> meta_data,
          .iov_len = payload.size()},
     }};
 
-    int current_index = 0;
-    int iovcnt        = 2;
-
-    while (total_sent < total_size) {
+    while (true) {
         // BUG FIX: The 3rd argument is the number of buffers (iovcnt), not the
         // byte size!
-        ssize_t sent = ::writev(m_fd, &io[current_index], iovcnt);
+        ssize_t sent = ::writev(m_fd, io.data(), io.size());
         if (sent < 0) {
             if (errno == EINTR)
                 continue;
@@ -109,10 +109,8 @@ TcpSocket::send(std::span<const uint8_t> meta_data,
                            std::strerror(errno));
             return std::unexpected(Error::WriteFailed);
         }
-        total_sent += sent;
-        detail::advance_iovec(io, total_sent);
+        return sent;
     }
-    return total_sent;
 }
 
 std::expected<size_t, Error>

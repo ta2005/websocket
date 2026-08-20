@@ -12,7 +12,7 @@ TcpSocket::TcpSocket(int fd, EventLoop &loop) : m_fd(fd), m_loop(loop) {}
 TcpSocket::~TcpSocket() {
     if (m_fd != -1) {
         ::close(m_fd);
-	m_loop.unregister_socket(*this);
+        m_loop.unregister_socket(*this);
         m_fd = -1;
     }
 }

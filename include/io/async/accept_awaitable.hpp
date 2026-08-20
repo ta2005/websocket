@@ -1,10 +1,12 @@
 #ifndef ACCEPT_AWAITABLE_HPP
 #define ACCEPT_AWAITABLE_HPP
 
+#include "common/error.hpp"
 #include "io/async/event_loop.hpp"
 #include "io/async/tcp_socket.hpp"
 #include <cerrno>
 #include <errno.h>
+#include <expected>
 #include <linux/sockios.h>
 #include <sys/epoll.h>
 #include <sys/socket.h>
@@ -26,10 +28,13 @@ struct AcceptAwaitable {
 
     void await_suspend(Handle hd) { loop.register_read(server, hd); }
 
-    TcpSocket await_resume() {
+    std::expected<TcpSocket, Error> await_resume() {
         if (c_fd >= 0)
             return TcpSocket{c_fd, loop};
         c_fd = ::accept4(server.get_fd(), NULL, NULL, SOCK_NONBLOCK);
+        if (c_fd < 0) {
+            return std::unexpected(Error::ConnectionFailed);
+        }
         return TcpSocket{c_fd, loop};
     }
 };
