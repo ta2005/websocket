@@ -39,10 +39,6 @@ void EventLoop::register_read(TcpSocket &socket, Handle h) {
     m_handles[socket.get_fd()].read_handle = h;
 }
 
-void EventLoop::register_accpet(TcpSocket&server,Handle h) {
-    m_handles[server.get_fd()].read_handle = h;
-}
-
 void EventLoop::register_write(TcpSocket &socket, Handle h) {
     m_handles[socket.get_fd()].write_handle = h;
 }

@@ -31,7 +31,6 @@ class EventLoop {
     void register_socket(TcpSocket &);
     void register_read(TcpSocket &, Handle);
     void register_write(TcpSocket &, Handle);
-    void register_accpet(TcpSocket&,Handle h);
     // void rearm(SocketCtx &, uint32_t);
 
   private:

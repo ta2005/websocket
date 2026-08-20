@@ -12,12 +12,6 @@
 
 namespace ws::async {
 struct AcceptAwaitable {
-    // should server be 
-    // a class of it's own???
-    // should it and it's constrocot 
-    // calls to bind and listen 
-    // I should also then have a client class
-    // where i can then store the data retruned but socket
     TcpSocket& server;
     EventLoop &loop;
     int        c_fd=-1;
@@ -35,7 +29,6 @@ struct AcceptAwaitable {
     TcpSocket await_resume() {
         if (c_fd >= 0)
             return TcpSocket{c_fd, loop};
-        // Epoll woke us up, read now!
         c_fd = ::accept4(server.get_fd(), NULL, NULL, SOCK_NONBLOCK);
         return TcpSocket{c_fd, loop};
     }
