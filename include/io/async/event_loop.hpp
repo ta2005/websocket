@@ -20,8 +20,8 @@ class EventLoop {
     EventLoop &operator=(EventLoop &) = delete;
     EventLoop(EventLoop &&);
     ~EventLoop();
-    EventLoop                      &operator=(EventLoop &&);
-    std::expected<EventLoop, Error> create();
+    EventLoop                             &operator=(EventLoop &&);
+    static std::expected<EventLoop, Error> create();
 
     void run();
     auto get_fd() { return m_epollfd; }

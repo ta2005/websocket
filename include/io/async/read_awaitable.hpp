@@ -34,7 +34,7 @@ struct ReadAwaitable {
         if (bytes_read > 0 || bytes_read == 0)
             return bytes_read;
         // Epoll woke us up, read now!
-        bytes_read = read(socket.get_fd(), buffer.data(), buffer.size());
+        bytes_read = ::read(socket.get_fd(), buffer.data(), buffer.size());
         if (bytes_read < 0) {
             return std::unexpected(Error::ConnectionFailed);
         }

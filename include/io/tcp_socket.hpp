@@ -30,10 +30,10 @@ class TcpSocket {
     int get_fd() const { return m_fd; }
         operator bool() { return m_fd != -1; }
     std::expected<size_t, Error>
-    send(const std::span<const uint8_t> meta_data,
-         const std::span<const uint8_t> payload) const;
-    std::expected<size_t, Error> send(const std::span<const uint8_t> meta_data,
-                                      std::string_view payload) const;
+    write(const std::span<const uint8_t> meta_data,
+          const std::span<const uint8_t> payload) const;
+    std::expected<size_t, Error> write(const std::span<const uint8_t> meta_data,
+                                       std::string_view payload) const;
     std::expected<size_t, Error> read(std::span<uint8_t> buf) const;
     // I think i can return std::string as the getaddrinfo strings
     // are statically allocated but further testing is needed

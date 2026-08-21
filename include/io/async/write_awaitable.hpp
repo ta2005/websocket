@@ -42,7 +42,7 @@ struct WaitWritable {
         if (bytes_sent > 0 || bytes_sent == 0)
             return bytes_sent;
         // Epoll woke us up, read now!
-        bytes_sent = writev(socket.get_fd(), io.data(), io.size());
+        bytes_sent = ::writev(socket.get_fd(), io.data(), io.size());
         if (bytes_sent < 0) {
             return std::unexpected(Error::ConnectionFailed);
         }

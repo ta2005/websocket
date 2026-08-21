@@ -169,15 +169,17 @@ parse_headers(const std::string_view headers) {
 }
 
 template <typename Socket>
-decltype(auto) send_handshake(const Socket &socket, const std::string_view host,
+decltype(auto) send_handshake(Socket &socket, const std::string_view host,
                               const std::string_view path,
                               const std::string_view port) {
     // this is just place holder that jsut works of course i can then use the
     // same stratgey as curl and get these fields from the command line
 
     return detail::dispatch<Socket>(
-        [=]() -> Task<std::expected<void, Error>> {
-            auto req = std::format("GET {} HTTP/1.1\r\n"
+        [&socket, host, path,
+         port]<typename S = Socket>() -> Task<std::expected<void, Error>> {
+            auto req =
+                std::format("GET {} HTTP/1.1\r\n"
                             "Connection: Upgrade\r\n"
                             "Upgrade: websocket\r\n"
                             "Host: {}:{}\r\n"
@@ -185,14 +187,19 @@ decltype(auto) send_handshake(const Socket &socket, const std::string_view host,
                             "Sec-WebSocket-Version: 13\r\n"
                             "\r\n",
                             path, host, port);
-            auto out = co_await socket.write_some(std::span<const uint8_t>{}, std::span<const uint8_t>{reinterpret_cast<const uint8_t*>(req.data()), req.size()});
+            auto out = co_await static_cast<S &>(socket).write(
+                std::span<const uint8_t>{},
+                std::span<const uint8_t>{
+                    reinterpret_cast<const uint8_t *>(req.data()), req.size()});
             if (!out) {
                 co_return std::unexpected(out.error());
             }
             co_return {};
         },
-        [=]() -> std::expected<void, Error> {
-            auto req = std::format("GET {} HTTP/1.1\r\n"
+        [&socket, host, path,
+         port]<typename S = Socket>() -> std::expected<void, Error> {
+            auto req =
+                std::format("GET {} HTTP/1.1\r\n"
                             "Connection: Upgrade\r\n"
                             "Upgrade: websocket\r\n"
                             "Host: {}:{}\r\n"
@@ -200,7 +207,10 @@ decltype(auto) send_handshake(const Socket &socket, const std::string_view host,
                             "Sec-WebSocket-Version: 13\r\n"
                             "\r\n",
                             path, host, port);
-            auto out = socket.write_some(std::span<const uint8_t>{}, std::span<const uint8_t>{reinterpret_cast<const uint8_t*>(req.data()), req.size()});
+            auto out = socket.write(
+                std::span<const uint8_t>{},
+                std::span<const uint8_t>{
+                    reinterpret_cast<const uint8_t *>(req.data()), req.size()});
             if (!out) {
                 return std::unexpected(out.error());
             }
@@ -209,17 +219,20 @@ decltype(auto) send_handshake(const Socket &socket, const std::string_view host,
 }
 
 template <typename Socket>
-decltype(auto) perform_handshake(const Socket &socket, const std::string_view host,
+decltype(auto) perform_handshake(Socket &socket, const std::string_view host,
                                  const std::string_view path,
                                  const std::string_view port = "80") {
     return detail::dispatch<Socket>(
-        [=]() -> Task<std::expected<HandskaheResult, Error>> {
-            auto res = co_await send_handshake(socket, host, path, port);
+        [&socket, host, path, port]<typename S = Socket>()
+            -> Task<std::expected<HandskaheResult, Error>> {
+            auto res = co_await send_handshake(static_cast<S &>(socket), host,
+                                               path, port);
             if (!res) {
                 co_return std::unexpected(res.error());
             }
             std::array<uint8_t, 1024 * 8> buffer;
-            auto                          actual_size = co_await socket.read_some(std::span{buffer.data(), buffer.size()});
+            auto actual_size = co_await static_cast<S &>(socket).read(
+                std::span{buffer.data(), buffer.size()});
             if (!actual_size) {
                 co_return std::unexpected(actual_size.error());
             }
@@ -232,19 +245,21 @@ decltype(auto) perform_handshake(const Socket &socket, const std::string_view ho
             if (parsed_header->second != *actual_size) {
                 size_t msg_len = *actual_size - parsed_header->second;
                 parsed_header->first.leftover.reserve(msg_len);
-                parsed_header->first.leftover.assign(buffer.begin() +
-                                                         parsed_header->second,
-                                                     buffer.begin() + *actual_size);
+                parsed_header->first.leftover.assign(
+                    buffer.begin() + parsed_header->second,
+                    buffer.begin() + *actual_size);
             }
             co_return parsed_header->first;
         },
-        [=]() -> std::expected<HandskaheResult, Error> {
+        [&socket, host, path,
+         port]<typename S = Socket>() -> std::expected<HandskaheResult, Error> {
             auto res = send_handshake(socket, host, path, port);
             if (!res) {
                 return std::unexpected(res.error());
             }
             std::array<uint8_t, 1024 * 8> buffer;
-            auto                          actual_size = socket.read_some(std::span{buffer.data(), buffer.size()});
+            auto                          actual_size =
+                socket.read(std::span{buffer.data(), buffer.size()});
             if (!actual_size) {
                 return std::unexpected(actual_size.error());
             }
@@ -257,14 +272,13 @@ decltype(auto) perform_handshake(const Socket &socket, const std::string_view ho
             if (parsed_header->second != *actual_size) {
                 size_t msg_len = *actual_size - parsed_header->second;
                 parsed_header->first.leftover.reserve(msg_len);
-                parsed_header->first.leftover.assign(buffer.begin() +
-                                                         parsed_header->second,
-                                                     buffer.begin() + *actual_size);
+                parsed_header->first.leftover.assign(
+                    buffer.begin() + parsed_header->second,
+                    buffer.begin() + *actual_size);
             }
             return parsed_header->first;
         });
 }
 
 } // namespace ws
-
 #endif

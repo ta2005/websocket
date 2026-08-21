@@ -7,6 +7,7 @@
 #include "common/details/dispatch.hpp"
 #include "common/details/parse_meta.hpp"
 #include "common/opcode.hpp"
+#include "common/status_code.hpp"
 #include "handshake.hpp"
 #include "simdutf.h"
 #include "task.hpp"
@@ -50,6 +51,12 @@ finalize(detail::PayloadMetaData meta) {
 }
 
 template <typename Socket> class Client {
+
+    template <typename T>
+    using Result =
+        std::conditional_t<isAsyncSocket<Socket>, Task<std::expected<T, Error>>,
+                           std::expected<T, Error>>;
+
   private:
     Socket       m_socket;
     std::mt19937 m_rng;
@@ -62,20 +69,25 @@ template <typename Socket> class Client {
 
     Client(Socket s) : m_socket(std::move(s)), m_rng(std::random_device{}()) {};
 
-    decltype(auto) send_impl(std::span<const uint8_t>, opcode);
-    decltype(auto) send_control_frame(std::span<const uint8_t>, opcode);
-    decltype(auto) read_header(size_t);
-    decltype(auto) read_payload(detail::PayloadMetaData);
-    decltype(auto) send_close(std::span<const uint8_t>);
-    decltype(auto) read_chunk_impl(size_t);
-    void           consume_leftover_buffer();
+    Result<ChunkView> read_chunk_impl(size_t);
+    decltype(auto)    send_impl(std::span<const uint8_t>, opcode);
+    decltype(auto)    send_control_frame(std::span<const uint8_t>, opcode);
+    decltype(auto)    read_header(size_t);
+    decltype(auto)    read_payload(detail::PayloadMetaData);
+    decltype(auto)    send_close(std::span<const uint8_t>);
+    void              consume_leftover_buffer();
+    decltype(auto)    fail_connection(status_code reason);
 
   public:
-    decltype(auto) read_chunk();
-    decltype(auto) send(std::span<const uint8_t>);
-    decltype(auto) send(const std::string_view);
-    decltype(auto) send_ping(std::span<const uint8_t>);
-    decltype(auto) send_pong(std::span<const uint8_t>);
+    Result<ChunkView> read_chunk();
+    decltype(auto)    send(std::span<const uint8_t>);
+    decltype(auto)    send(const std::string_view);
+    decltype(auto)    send_ping(std::span<const uint8_t>);
+    decltype(auto)    send_pong(std::span<const uint8_t>);
+
+    static decltype(auto) create(Socket s, const std::string_view host,
+                                 const std::string_view path,
+                                 const std::string_view port = "80");
 };
 
 template <typename Socket>
@@ -91,7 +103,8 @@ decltype(auto) Client<Socket>::send(const std::string_view msg) {
                 co_return std::unexpected(err);
             }(Error::InvalidUTF8);
         } else {
-            return std::unexpected(Error::InvalidUTF8);
+            return std::expected<void, Error>(
+                std::unexpected(Error::InvalidUTF8));
         }
     }
     auto buf = std::span<const uint8_t>(
@@ -103,7 +116,8 @@ template <typename Socket>
 decltype(auto) Client<Socket>::send_impl(std::span<const uint8_t> msg,
                                          opcode                   first_op) {
     return detail::dispatch<Socket>(
-        [this, msg, first_op]() -> Task<std::expected<void, Error>> {
+        [this, msg,
+         first_op]<typename S = Socket>() -> Task<std::expected<void, Error>> {
             if (m_state != ConnectionState::Open) {
                 co_return std::unexpected(Error::InvalidState);
             }
@@ -112,7 +126,8 @@ decltype(auto) Client<Socket>::send_impl(std::span<const uint8_t> msg,
                 auto [meta, payload] = fmt.next();
                 auto metas           = meta.span();
                 while (!(metas).empty() || !payload.empty()) {
-                    auto n = co_await m_socket.write(metas, payload);
+                    auto n = co_await static_cast<S &>(m_socket).write(metas,
+                                                                       payload);
                     if (!n) {
                         co_return std::unexpected(n.error());
                     }
@@ -121,7 +136,8 @@ decltype(auto) Client<Socket>::send_impl(std::span<const uint8_t> msg,
             }
             co_return std::expected<void, Error>{};
         },
-        [this, msg, first_op]() -> std::expected<void, Error> {
+        [this, msg,
+         first_op]<typename S = Socket>() -> std::expected<void, Error> {
             if (m_state != ConnectionState::Open) {
                 return std::unexpected(Error::InvalidState);
             }
@@ -142,6 +158,16 @@ decltype(auto) Client<Socket>::send_impl(std::span<const uint8_t> msg,
 }
 
 template <typename Socket>
+decltype(auto) Client<Socket>::fail_connection(status_code reason) {
+    auto st = htons(static_cast<uint16_t>(reason));
+    if (auto send_res = send_close({reinterpret_cast<const uint8_t *>(&st), 2});
+        !send_res) {
+    }
+    m_socket.close();
+    m_state = ConnectionState::Closed;
+}
+
+template <typename Socket>
 decltype(auto)
 Client<Socket>::send_control_frame(std::span<const uint8_t> payload,
                                    opcode                   op) {
@@ -151,7 +177,8 @@ Client<Socket>::send_control_frame(std::span<const uint8_t> payload,
                 co_return std::unexpected(err);
             }(Error::InvalidPayloadLength);
         } else {
-            return std::unexpected(Error::InvalidPayloadLength);
+            return std::expected<void, Error>(
+                std::unexpected(Error::InvalidUTF8));
         }
     }
     return send_impl(payload, op);
@@ -176,8 +203,8 @@ template <typename Socket>
 decltype(auto) Client<Socket>::read_header(size_t first_read) {
     return detail::dispatch<Socket>(
         // --- ASYNC PATH ---
-        [this,
-         first_read]() -> Task<std::expected<detail::PayloadMetaData, Error>> {
+        [this, first_read]<typename S = Socket>()
+            -> Task<std::expected<detail::PayloadMetaData, Error>> {
             auto &buffer      = current_read.data;
             auto  parsed_meta = detail::parse_meta({buffer.data(), first_read});
 
@@ -186,8 +213,8 @@ decltype(auto) Client<Socket>::read_header(size_t first_read) {
                     co_return std::unexpected(parsed_meta.error());
                 }
                 std::array<uint8_t, chunk_size> tmp;
-                auto                            read_size =
-                    co_await m_socket.read_some({tmp.data(), tmp.size()});
+                auto read_size = co_await static_cast<S &>(m_socket).read(
+                    {tmp.data(), tmp.size()});
                 if (!read_size) {
                     co_return std::unexpected(read_size.error());
                 }
@@ -206,7 +233,8 @@ decltype(auto) Client<Socket>::read_header(size_t first_read) {
         },
 
         // --- SYNC PATH ---
-        [this, first_read]() -> std::expected<detail::PayloadMetaData, Error> {
+        [this, first_read]<typename S = Socket>()
+            -> std::expected<detail::PayloadMetaData, Error> {
             auto &buffer      = current_read.data;
             auto  parsed_meta = detail::parse_meta({buffer.data(), first_read});
 
@@ -215,7 +243,7 @@ decltype(auto) Client<Socket>::read_header(size_t first_read) {
                     return std::unexpected(parsed_meta.error());
                 }
                 std::array<uint8_t, chunk_size> tmp;
-                auto read_size = m_socket.read_some({tmp.data(), tmp.size()});
+                auto read_size = m_socket.read({tmp.data(), tmp.size()});
                 if (!read_size) {
                     return std::unexpected(read_size.error());
                 }
@@ -233,7 +261,8 @@ template <typename Socket>
 decltype(auto) Client<Socket>::read_payload(detail::PayloadMetaData meta) {
     return detail::dispatch<Socket>(
         // --- ASYNC PATH ---
-        [this, meta]() -> Task<std::expected<void, Error>> {
+        [this,
+         meta]<typename S = Socket>() -> Task<std::expected<void, Error>> {
             auto &buffer = current_read.data;
             // Buffer still holds the un-erased header (meta.meta_size bytes)
             // up front, plus whatever payload bytes already arrived as
@@ -243,8 +272,8 @@ decltype(auto) Client<Socket>::read_payload(detail::PayloadMetaData meta) {
 
             while (total_read < meta.len) {
                 std::array<uint8_t, chunk_size> tmp;
-                auto                            read_size =
-                    co_await m_socket.read_some({tmp.data(), tmp.size()});
+                auto read_size = co_await static_cast<S &>(m_socket).read(
+                    {tmp.data(), tmp.size()});
                 if (!read_size) {
                     co_return std::unexpected(read_size.error());
                 }
@@ -259,13 +288,13 @@ decltype(auto) Client<Socket>::read_payload(detail::PayloadMetaData meta) {
         },
 
         // --- SYNC PATH ---
-        [this, meta]() -> std::expected<void, Error> {
+        [this, meta]<typename S = Socket>() -> std::expected<void, Error> {
             auto  &buffer     = current_read.data;
             size_t total_read = buffer.size() - meta.meta_size;
 
             while (total_read < meta.len) {
                 std::array<uint8_t, chunk_size> tmp;
-                auto read_size = m_socket.read_some({tmp.data(), tmp.size()});
+                auto read_size = m_socket.read({tmp.data(), tmp.size()});
                 if (!read_size) {
                     return std::unexpected(read_size.error());
                 }
@@ -289,44 +318,54 @@ template <typename T> void Client<T>::consume_leftover_buffer() {
 }
 
 template <typename Socket>
-decltype(auto) Client<Socket>::read_chunk_impl(size_t first_read) {
+typename Client<Socket>::template Result<ChunkView>
+Client<Socket>::read_chunk_impl(size_t first_read) {
     return detail::dispatch<Socket>(
         // --- ASYNC PATH ---
-        [this, first_read]() -> Task<std::expected<ChunkView, Error>> {
-            auto &buffer          = current_read.data;
-            auto  parsed_meta_res = co_await read_header(first_read);
+        [this, first_read]<typename S = Socket>()
+            -> Task<std::expected<ChunkView, Error>> {
+            auto &buffer = current_read.data;
+            auto  parsed_meta_res =
+                co_await static_cast<Client<S> *>(this)->read_header(
+                    first_read);
 
             if (!parsed_meta_res) {
                 // fail_connection(get_status_code(parsed_meta_res.error()));
                 co_return std::unexpected(parsed_meta_res.error());
             }
 
-            auto payload_res = co_await read_payload(*parsed_meta_res);
+            auto payload_res =
+                co_await static_cast<Client<S> *>(this)->read_payload(
+                    *parsed_meta_res);
             if (!payload_res) {
                 co_return std::unexpected(payload_res.error());
             }
 
             if (m_state == ConnectionState::Closing &&
                 !is_control(parsed_meta_res->op)) {
-                co_return co_await read_chunk();
+                co_return co_await static_cast<Client<S> *>(this)->read_chunk();
             }
 
             switch (parsed_meta_res->op) {
                 case opcode::ping: {
                     auto pong_res = co_await send_pong(
-                        {buffer.data(), parsed_meta_res->len});
+                        {buffer.data() + parsed_meta_res->meta_size,
+                         parsed_meta_res->len});
                     if (!pong_res) {
                         co_return std::unexpected(pong_res.error());
                     }
-                    co_return co_await read_chunk();
+                    co_return co_await static_cast<Client<S> *>(this)
+                        ->read_chunk();
                 } break;
                 case opcode::pong: {
-                    co_return co_await read_chunk();
+                    co_return co_await static_cast<Client<S> *>(this)
+                        ->read_chunk();
                 } break;
                 case opcode::close: {
                     if (m_state == ConnectionState::Open) {
                         auto close_res = co_await send_close(
-                            {buffer.data(), parsed_meta_res->len});
+                            {buffer.data() + parsed_meta_res->meta_size,
+                             parsed_meta_res->len});
                         if (!close_res) {
                             co_return std::unexpected(close_res.error());
                         }
@@ -336,15 +375,17 @@ decltype(auto) Client<Socket>::read_chunk_impl(size_t first_read) {
                 } break;
                 default:;
             }
-            ChunkView res = {.payload =
-                                 std::span{buffer.data(), parsed_meta_res->len},
-                             .is_fin = parsed_meta_res->fin,
-                             .type   = parsed_meta_res->op};
+            ChunkView res = {
+                .payload = std::span{buffer.data() + parsed_meta_res->meta_size,
+                                     parsed_meta_res->len},
+                .is_fin  = parsed_meta_res->fin,
+                .type    = parsed_meta_res->op};
             co_return res;
         },
 
         // --- SYNC PATH ---
-        [this, first_read]() -> std::expected<ChunkView, Error> {
+        [this,
+         first_read]<typename S = Socket>() -> std::expected<ChunkView, Error> {
             auto &buffer          = current_read.data;
             auto  parsed_meta_res = read_header(first_read);
 
@@ -366,7 +407,8 @@ decltype(auto) Client<Socket>::read_chunk_impl(size_t first_read) {
             switch (parsed_meta_res->op) {
                 case opcode::ping: {
                     auto pong_res =
-                        send_pong({buffer.data(), parsed_meta_res->len});
+                        send_pong({buffer.data() + parsed_meta_res->meta_size,
+                                   parsed_meta_res->len});
                     if (!pong_res) {
                         return std::unexpected(pong_res.error());
                     }
@@ -377,8 +419,9 @@ decltype(auto) Client<Socket>::read_chunk_impl(size_t first_read) {
                 } break;
                 case opcode::close: {
                     if (m_state == ConnectionState::Open) {
-                        auto close_res =
-                            send_close({buffer.data(), parsed_meta_res->len});
+                        auto close_res = send_close(
+                            {buffer.data() + parsed_meta_res->meta_size,
+                             parsed_meta_res->len});
                         if (!close_res) {
                             return std::unexpected(close_res.error());
                         }
@@ -388,45 +431,86 @@ decltype(auto) Client<Socket>::read_chunk_impl(size_t first_read) {
                 } break;
                 default:;
             }
-            ChunkView res = {.payload =
-                                 std::span{buffer.data(), parsed_meta_res->len},
-                             .is_fin = parsed_meta_res->fin,
-                             .type   = parsed_meta_res->op};
+            ChunkView res = {
+                .payload = std::span{buffer.data() + parsed_meta_res->meta_size,
+                                     parsed_meta_res->len},
+                .is_fin  = parsed_meta_res->fin,
+                .type    = parsed_meta_res->op};
             return res;
         });
 }
 
-template <typename Socket> decltype(auto) Client<Socket>::read_chunk() {
+template <typename Socket>
+typename Client<Socket>::template Result<ChunkView>
+Client<Socket>::read_chunk() {
     return detail::dispatch<Socket>(
-        [this]() -> Task<std::expected<ChunkView, Error>> {
+        [this]<typename S = Socket>() -> Task<std::expected<ChunkView, Error>> {
             auto &buffer = current_read.data;
             consume_leftover_buffer();
             if (!buffer.empty()) {
-                co_return co_await read_chunk_impl(buffer.size());
+                co_return co_await static_cast<Client<S> *>(this)
+                    ->read_chunk_impl(buffer.size());
             }
             buffer.resize(chunk_size);
-            auto first_read =
-                co_await m_socket.read_some({buffer.data(), buffer.size()});
+            auto first_read = co_await static_cast<S &>(m_socket).read(
+                {buffer.data(), buffer.size()});
             if (!first_read) {
                 co_return std::unexpected(first_read.error());
             }
             buffer.resize(*first_read);
             co_return co_await read_chunk_impl(*first_read);
         },
-        [this]() -> std::expected<ChunkView, Error> {
+        [this]<typename S = Socket>() -> std::expected<ChunkView, Error> {
             auto &buffer = current_read.data;
             consume_leftover_buffer();
             if (!buffer.empty()) {
                 return read_chunk_impl(buffer.size());
             }
             buffer.resize(chunk_size);
-            auto first_read =
-                m_socket.read_some({buffer.data(), buffer.size()});
+            auto first_read = m_socket.read({buffer.data(), buffer.size()});
             if (!first_read) {
                 return std::unexpected(first_read.error());
             }
             buffer.resize(*first_read);
             return read_chunk_impl(*first_read);
+        });
+}
+
+template <typename Socket>
+decltype(auto) Client<Socket>::create(Socket s, const std::string_view host,
+                                      const std::string_view path,
+                                      const std::string_view port) {
+    return detail::dispatch<Socket>(
+        [host, path, port, s = std::move(s)]<typename S = Socket>() mutable
+            -> Task<std::expected<Client<Socket>, Error>> {
+            auto hs_res = co_await perform_handshake(static_cast<S &>(s), host,
+                                                     path, port);
+            if (!hs_res) {
+                co_return std::unexpected(hs_res.error());
+            }
+            Client<Socket> client(std::move(s));
+            if (!hs_res->leftover.empty()) {
+                client.current_read.data = std::move(hs_res->leftover);
+                // The remaining_bytes is actually 0 initially because
+                // the leftover buffer contains raw unparsed frames, NOT a
+                // parsed header. read_chunk() checks if !buffer.empty() and
+                // then calls read_chunk_impl.
+                client.current_read.remaing_bytes = 0;
+            }
+            co_return client;
+        },
+        [host, path, port, s = std::move(s)]<typename S = Socket>() mutable
+            -> std::expected<Client<Socket>, Error> {
+            auto hs_res = perform_handshake(s, host, path, port);
+            if (!hs_res) {
+                return std::unexpected(hs_res.error());
+            }
+            Client<Socket> client(std::move(s));
+            if (!hs_res->leftover.empty()) {
+                client.current_read.data          = std::move(hs_res->leftover);
+                client.current_read.remaing_bytes = 0;
+            }
+            return client;
         });
 }
 

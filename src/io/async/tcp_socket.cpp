@@ -25,7 +25,7 @@ TcpSocket::TcpSocket(TcpSocket &&other) noexcept
 TcpSocket &TcpSocket::operator=(TcpSocket &&other) noexcept {
     if (this != &other) {
         if (m_fd != -1) {
-            ::close(m_fd);
+            this->close();
         }
         m_fd = std::exchange(other.m_fd, -1);
     }
@@ -36,8 +36,8 @@ ReadAwaitable TcpSocket::read(std::span<uint8_t> buffer) {
     return ReadAwaitable{*this, buffer, m_loop};
 }
 
-WaitWritable TcpSocket::write(std::span<uint8_t> meta,
-                              std::span<uint8_t> payload) {
+WaitWritable TcpSocket::write(std::span<const uint8_t> meta,
+                              std::span<const uint8_t> payload) {
     return WaitWritable{*this, m_loop, meta, payload};
 }
 

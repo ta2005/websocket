@@ -14,7 +14,7 @@ struct ChunkFormatter {
     opcode                          first_op;
     std::mt19937                   &rng;
     bool                            is_first = true;
-    std::array<uint8_t, chunk_size> tmp_buf;
+    std::array<uint8_t, chunk_size> tmp_buf{};
     bool has_next() { return !remaining.empty() || is_first; }
     auto next() {
         bool   is_final  = remaining.size() <= chunk_size;

@@ -41,7 +41,8 @@ class TcpSocket {
     void close();
 
     ReadAwaitable   read(std::span<uint8_t> buffer);
-    WaitWritable    write(std::span<uint8_t> meta, std::span<uint8_t> payload);
+    WaitWritable    write(std::span<const uint8_t> meta,
+                          std::span<const uint8_t> payload);
     AcceptAwaitable accept();
 };
 } // namespace ws::async

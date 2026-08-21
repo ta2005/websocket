@@ -73,8 +73,8 @@ std::expected<size_t, Error> TcpSocket::read(std::span<uint8_t> buf) const {
 // because a span is just a lightweight view (pointer + size).
 // Passing `std::span<const uint8_t>` by value is the standard C++ way!
 std::expected<size_t, Error>
-TcpSocket::send(std::span<const uint8_t> meta_data,
-                std::span<const uint8_t> payload) const {
+TcpSocket::write(std::span<const uint8_t> meta_data,
+                 std::span<const uint8_t> payload) const {
     // this function basically tries to send it all
     std::array<iovec, 2> io = {{
 
@@ -101,11 +101,11 @@ TcpSocket::send(std::span<const uint8_t> meta_data,
 }
 
 std::expected<size_t, Error>
-TcpSocket::send(const std::span<const uint8_t> meta_data,
-                std::string_view               payload) const {
+TcpSocket::write(const std::span<const uint8_t> meta_data,
+                 std::string_view               payload) const {
     auto buf = std::span<const uint8_t>(
         reinterpret_cast<const uint8_t *>(payload.data()), payload.size());
-    return send(meta_data, buf);
+    return write(meta_data, buf);
 }
 
 } // namespace ws
