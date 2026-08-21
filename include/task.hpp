@@ -14,8 +14,8 @@ template <typename T> class Task {
     using Handle = std::coroutine_handle<promise_type>;
 
     struct promise_type {
-        std::optional<T>   value;
-        std::exception_ptr exception;
+        std::optional<T>        value;
+        std::exception_ptr      exception;
         std::coroutine_handle<> continuation;
 
         Task get_return_object() noexcept {
@@ -27,7 +27,8 @@ template <typename T> class Task {
         struct FinalAwaiter {
             bool await_ready() const noexcept { return false; }
             std::coroutine_handle<> await_suspend(Handle h) noexcept {
-                return h.promise().continuation ? h.promise().continuation : std::noop_coroutine();
+                return h.promise().continuation ? h.promise().continuation
+                                                : std::noop_coroutine();
             }
             void await_resume() const noexcept {}
         };
@@ -35,20 +36,27 @@ template <typename T> class Task {
         FinalAwaiter final_suspend() noexcept { return {}; }
 
         void return_value(T v) noexcept { value = std::move(v); }
-        void unhandled_exception() noexcept { exception = std::current_exception(); }
+        void unhandled_exception() noexcept {
+            exception = std::current_exception();
+        }
     };
 
     Task() noexcept = default;
     explicit Task(Handle h) noexcept : handle_(h) {}
-    ~Task() { if (handle_) handle_.destroy(); }
+    ~Task() {
+        if (handle_)
+            handle_.destroy();
+    }
 
-    Task(const Task &) = delete;
+    Task(const Task &)            = delete;
     Task &operator=(const Task &) = delete;
 
-    Task(Task &&other) noexcept : handle_(std::exchange(other.handle_, nullptr)) {}
+    Task(Task &&other) noexcept
+        : handle_(std::exchange(other.handle_, nullptr)) {}
     Task &operator=(Task &&other) noexcept {
         if (this != &other) {
-            if (handle_) handle_.destroy();
+            if (handle_)
+                handle_.destroy();
             handle_ = std::exchange(other.handle_, nullptr);
         }
         return *this;
@@ -57,9 +65,11 @@ template <typename T> class Task {
     // --- AWAITABLE INTERFACE ---
     bool await_ready() const noexcept { return !handle_ || handle_.done(); }
 
-    std::coroutine_handle<> await_suspend(std::coroutine_handle<> caller) noexcept {
+    std::coroutine_handle<>
+    await_suspend(std::coroutine_handle<> caller) noexcept {
         handle_.promise().continuation = caller;
-        return handle_; // Symmetric transfer: suspends caller and resumes this task immediately!
+        return handle_; // Symmetric transfer: suspends caller and resumes this
+                        // task immediately!
     }
 
     T await_resume() {

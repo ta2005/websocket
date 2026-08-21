@@ -7,6 +7,7 @@
 #include "common/details/dispatch.hpp"
 #include "common/details/parse_meta.hpp"
 #include "common/opcode.hpp"
+#include "handshake.hpp"
 #include "simdutf.h"
 #include "task.hpp"
 #include <cstdint>
@@ -292,26 +293,28 @@ decltype(auto) Client<Socket>::read_chunk_impl(size_t first_read) {
     return detail::dispatch<Socket>(
         // --- ASYNC PATH ---
         [this, first_read]() -> Task<std::expected<ChunkView, Error>> {
-            auto &buffer = current_read.data;
-            auto parsed_meta_res = co_await read_header(first_read);
-            
+            auto &buffer          = current_read.data;
+            auto  parsed_meta_res = co_await read_header(first_read);
+
             if (!parsed_meta_res) {
                 // fail_connection(get_status_code(parsed_meta_res.error()));
                 co_return std::unexpected(parsed_meta_res.error());
             }
-            
+
             auto payload_res = co_await read_payload(*parsed_meta_res);
             if (!payload_res) {
                 co_return std::unexpected(payload_res.error());
             }
 
-            if (m_state == ConnectionState::Closing && !is_control(parsed_meta_res->op)) {
+            if (m_state == ConnectionState::Closing &&
+                !is_control(parsed_meta_res->op)) {
                 co_return co_await read_chunk();
             }
 
             switch (parsed_meta_res->op) {
                 case opcode::ping: {
-                    auto pong_res = co_await send_pong({buffer.data(), parsed_meta_res->len});
+                    auto pong_res = co_await send_pong(
+                        {buffer.data(), parsed_meta_res->len});
                     if (!pong_res) {
                         co_return std::unexpected(pong_res.error());
                     }
@@ -322,7 +325,8 @@ decltype(auto) Client<Socket>::read_chunk_impl(size_t first_read) {
                 } break;
                 case opcode::close: {
                     if (m_state == ConnectionState::Open) {
-                        auto close_res = co_await send_close({buffer.data(), parsed_meta_res->len});
+                        auto close_res = co_await send_close(
+                            {buffer.data(), parsed_meta_res->len});
                         if (!close_res) {
                             co_return std::unexpected(close_res.error());
                         }
@@ -332,34 +336,37 @@ decltype(auto) Client<Socket>::read_chunk_impl(size_t first_read) {
                 } break;
                 default:;
             }
-            ChunkView res = {.payload = std::span{buffer.data(), parsed_meta_res->len},
-                             .is_fin  = parsed_meta_res->fin,
-                             .type    = parsed_meta_res->op};
+            ChunkView res = {.payload =
+                                 std::span{buffer.data(), parsed_meta_res->len},
+                             .is_fin = parsed_meta_res->fin,
+                             .type   = parsed_meta_res->op};
             co_return res;
         },
 
         // --- SYNC PATH ---
         [this, first_read]() -> std::expected<ChunkView, Error> {
-            auto &buffer = current_read.data;
-            auto parsed_meta_res = read_header(first_read);
-            
+            auto &buffer          = current_read.data;
+            auto  parsed_meta_res = read_header(first_read);
+
             if (!parsed_meta_res) {
                 // fail_connection(get_status_code(parsed_meta_res.error()));
                 return std::unexpected(parsed_meta_res.error());
             }
-            
+
             auto payload_res = read_payload(*parsed_meta_res);
             if (!payload_res) {
                 return std::unexpected(payload_res.error());
             }
 
-            if (m_state == ConnectionState::Closing && !is_control(parsed_meta_res->op)) {
+            if (m_state == ConnectionState::Closing &&
+                !is_control(parsed_meta_res->op)) {
                 return read_chunk();
             }
 
             switch (parsed_meta_res->op) {
                 case opcode::ping: {
-                    auto pong_res = send_pong({buffer.data(), parsed_meta_res->len});
+                    auto pong_res =
+                        send_pong({buffer.data(), parsed_meta_res->len});
                     if (!pong_res) {
                         return std::unexpected(pong_res.error());
                     }
@@ -370,7 +377,8 @@ decltype(auto) Client<Socket>::read_chunk_impl(size_t first_read) {
                 } break;
                 case opcode::close: {
                     if (m_state == ConnectionState::Open) {
-                        auto close_res = send_close({buffer.data(), parsed_meta_res->len});
+                        auto close_res =
+                            send_close({buffer.data(), parsed_meta_res->len});
                         if (!close_res) {
                             return std::unexpected(close_res.error());
                         }
@@ -380,15 +388,15 @@ decltype(auto) Client<Socket>::read_chunk_impl(size_t first_read) {
                 } break;
                 default:;
             }
-            ChunkView res = {.payload = std::span{buffer.data(), parsed_meta_res->len},
-                             .is_fin  = parsed_meta_res->fin,
-                             .type    = parsed_meta_res->op};
+            ChunkView res = {.payload =
+                                 std::span{buffer.data(), parsed_meta_res->len},
+                             .is_fin = parsed_meta_res->fin,
+                             .type   = parsed_meta_res->op};
             return res;
         });
 }
 
-template <typename Socket> 
-decltype(auto) Client<Socket>::read_chunk() {
+template <typename Socket> decltype(auto) Client<Socket>::read_chunk() {
     return detail::dispatch<Socket>(
         [this]() -> Task<std::expected<ChunkView, Error>> {
             auto &buffer = current_read.data;
@@ -397,7 +405,8 @@ decltype(auto) Client<Socket>::read_chunk() {
                 co_return co_await read_chunk_impl(buffer.size());
             }
             buffer.resize(chunk_size);
-            auto first_read = co_await m_socket.read_some({buffer.data(), buffer.size()});
+            auto first_read =
+                co_await m_socket.read_some({buffer.data(), buffer.size()});
             if (!first_read) {
                 co_return std::unexpected(first_read.error());
             }
@@ -411,7 +420,8 @@ decltype(auto) Client<Socket>::read_chunk() {
                 return read_chunk_impl(buffer.size());
             }
             buffer.resize(chunk_size);
-            auto first_read = m_socket.read_some({buffer.data(), buffer.size()});
+            auto first_read =
+                m_socket.read_some({buffer.data(), buffer.size()});
             if (!first_read) {
                 return std::unexpected(first_read.error());
             }
