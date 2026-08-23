@@ -1,12 +1,6 @@
 CompileFlags:
-  Compiler: g++
   Add:
-    - -xc++
     - -std=c++23
-    - -Wall
-    - -Wextra
-    - -Wpedantic
-    - -ggdb
     - -Iinclude
     - -Iinclude/common
     - -Iinclude/common/details
@@ -15,3 +9,10 @@ CompileFlags:
     - -Ivendor
   Remove:
     - -fsanitize=*
+    # - -std=c++23
+
+---
+If:
+  PathMatch: .*\.hpp
+CompileFlags:
+  Add: [-xc++-header]

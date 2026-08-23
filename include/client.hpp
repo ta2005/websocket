@@ -26,11 +26,6 @@ struct ChunkView {
     opcode             type;
 };
 
-struct Message {
-    std::vector<uint8_t> payload;
-    opcode               type;
-};
-
 enum class ConnectionState { Open, Closing, Closed };
 
 // Pure validation, no I/O, no buffer mutation — shared by both branches
@@ -84,6 +79,7 @@ template <typename Socket> class Client {
     decltype(auto)    send(const std::string_view);
     decltype(auto)    send_ping(std::span<const uint8_t>);
     decltype(auto)    send_pong(std::span<const uint8_t>);
+    // decltype(auto)    close();
 
     static decltype(auto) create(Socket s, const std::string_view host,
                                  const std::string_view path,
@@ -193,6 +189,16 @@ template <typename Socket>
 decltype(auto) Client<Socket>::send_ping(std::span<const uint8_t> payload) {
     return send_control_frame(payload, opcode::ping);
 }
+
+// template <typename Socket>
+// decltype(auto) Client<Socket>::close(){
+//     if (m_state != ConnectionState::Open){
+//     }
+//     m_state = ConnectionState::Closing;
+//     send_close(std::span<const uint8_t>(nullptr,0));
+//     m_socket.close();
+//     // return {};
+// }
 
 template <typename Socket>
 decltype(auto) Client<Socket>::send_close(std::span<const uint8_t> payload) {
@@ -371,7 +377,7 @@ Client<Socket>::read_chunk_impl(size_t first_read) {
                         }
                     }
                     m_state = ConnectionState::Closed;
-                    // m_socket.close();
+                    m_socket.close();
                 } break;
                 default:;
             }
@@ -427,7 +433,7 @@ Client<Socket>::read_chunk_impl(size_t first_read) {
                         }
                     }
                     m_state = ConnectionState::Closed;
-                    // m_socket.close();
+                    m_socket.close();
                 } break;
                 default:;
             }
