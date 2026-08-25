@@ -22,14 +22,17 @@ concept isAsyncSocket = requires(T t, std::span<uint8_t> buffer) {
 };
 
 template <typename T>
-concept IsSocket = requires(T t, std::span<uint8_t> mut_buf, std::span<const uint8_t> const_buf) {
-    // Must have read and write methods
-    t.read(mut_buf);
-    t.write(const_buf, const_buf);
-    
-    // Must have a close method
-    { t.close() } -> std::same_as<void>;
-} && std::movable<T> && !std::copy_constructible<T>;
+concept IsSocket =
+    requires(T t, std::span<uint8_t> mut_buf,
+             std::span<const uint8_t> const_buf) {
+        // Must have read and write methods
+        t.read(mut_buf);
+        t.write(const_buf, const_buf);
+
+        // Must have a close method
+        { t.close() } -> std::same_as<void>;
+    } &&
+    std::movable<T> && !std::copy_constructible<T>;
 
 template <typename socket>
     requires(!isAsyncSocket<socket>)

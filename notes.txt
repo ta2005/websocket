@@ -1,0 +1,173 @@
+These are some notes about lib uWebsocket 
+It is currently the fastest know implementation of WebSocket
+and i will try my best to beat it :
+
+The loop :
+this library has different loop backend but i will focus on the epoll one
+(it has ioruing libuv gcd and asio)
+they epoll imp is basically identical to mine give or take
+
+ok ok i will not shit on it 
+here are all the step and api breakdown
+
+bsd socket:
+
+the bsd addr only depend on the system nothing else
+struct bsd_addr_t {
+    struct sockaddr_storage mem;
+    socklen_t len;
+    char *ip;
+    int ip_length;
+    int port;
+};
+
+bsd_sendmmsg is not used anywhere in the code 
+
+set_non_blocking : I don't think this one is used since it can be set 
+in the socket creation
+according to the dock the delay one also flushes the kernel buffer
+
+TODO: where
+set no delay is used in the loop
+
+flush removes the cork 
+
+create just create
+
+the shutdown for read and write 
+
+recv and send are the same 
+
+write is writev
+
+would_block is errno
+
+create_listen is the usual getaddrinfo :bind and listen
+so is create_connect:connect
+
+The socket :
+so here is what a poll:
+there is some sort of inheritance (libuv style)
+it is what is registered in epoll_events.data.ptr
+it holds fd and events
+
+close : unlinks the socket(i still don't know what the linking does)
+	close the socket
+	unregistres it from epoll instance 
+write2 
+send : same as bsd but check for closrue
+	and return the amount written
+
+is_shutodows just check on the poll instance for the type 
+
+shutdown changes the status and does shutdown syscall on wr
+
+flush is the same as bsd_flush
+
+
+loop:the pretty thing is that 
+socket does not depend on loop
+loop does not depend on socket 
+they communicate throught the us_poll_t
+(there are sill some stuff in loop.c)
+everything is stored on the heap(makes sense)
+(curiously the poll now supports only two operatoin read and write?)
+this should have been a macro i have seen it like six times now return ((p->state.poll_type & POLL_TYPE_POLLING_IN) ? LIBUS_SOCKET_READABLE : 0) | ((p->state.poll_type & POLL_TYPE_POLLING_OUT) ? LIBUS_SOCKET_WRITABLE : 0);
+
+create allocate the loop on the heap and calls epoll_create
+
+the run just calls epoll_wait and then get the event from inside the data.ptr
+stat and change are epoll_add and epoll_mod
+
+loop_intergrate loop_pre loop_post??
+
+loop.c:
+
+//this is the data pool honestly i don't know what half of these fields do
+struct us_internal_loop_data_t {
+    struct us_timer_t *sweep_timer;
+    struct us_internal_async *wakeup_async;
+    int last_write_failed;
+    struct us_socket_context_t *head;
+    struct us_socket_context_t *iterator;
+    char *recv_buf;
+    void *ssl_data;
+    void (*pre_cb)(struct us_loop_t *);
+    void (*post_cb)(struct us_loop_t *);
+    struct us_socket_t *closed_head;
+    struct us_socket_t *low_prio_head;
+    int low_prio_budget;
+    /* We do not care if this flips or not, it doesn't matter */
+    long long iteration_nr;
+};
+
+
+
+socket context
+the socket context is the context for all sockets created 
+the socket context has the timestamp 
+callback 
+
+context.c
+timestamp gets the context timestamp
+close_socket clsoes the socket and epoll_dlt
+but i does not deallocate it why??
+
+when closing a socket they append it to the beginnging 
+of the close socket 
+
+the unlink for the listen socket and normal socket is the same 
+expect for the head
+
+close_context first closes the socket by iterating the list then it closes them
+
+linking a socket adds it to the beginning
+
+creating a listen_socket and connect_socket
+both use the bsd functoin 
+and link the socket to the context aka add it to the beginning of the loop
+
+in loop.c there is the dispath : 
+the reading does nothing other then execute the on_writable 
+and the new data is lost 
+
+there smth low prio about ssl i don't understand 
+ok this is it (well there are a lot of todos in it so I should probably be gentleman and make a contribution)
+(in this library there is smth that feel wrong or unsafe not all the pointer stuff but some check seem to be missing 
+or i am just hilusinating)
+
+AsyncSocket is the main orchestrator of both corking and backpressure
+ok the LoopData hold the buffer and the corkedsocket 
+everything that is a .*Data is the data in the ext part of the socket
+AsyncSocketData hold the backpressure used when reading socket
+isCorcked checks wheter we are the corked socket 
+
+the getSendBuffer is used in the Websocket part:
+this uses a nice trick where it return a temporary buffer 
+it the socket does not have backpressure and is corked(aka has accees to the loop data) 
+it return a pointer to the corkbuffer
+else it moves the corkbuffer to the front of backpressrue and return a pointer to it 
+nice trick this allows it even in the worst case to have it's temporary buffer add space to backpressure
+but it is relatively expensive
+
+uncork and write are mutually recursive functoin 
+well write call uncork when the buffer is full
+and uncork removes the corking so they take different paths
+uncork check if we are corked removes us and writes to the buffer
+
+ok for socket buffers ( which is only now used like in one place in the uncork functoin with non optinal data so it is not a big deal)
+if we are corked then you add to the end of the buffer if you can 
+if our cork buffer is full 
+we don't append more to it we simply flush it 
+
+ok for me the optinal non full write seem insane 
+but thankfully in the ws connectoin they are never used
+for non corked with buffer we simply write and append left to the buffer
+
+so if i understand correctly in my implemnet the write_awaitable will now call this write and uncork mechanism
+
+the WebSocket class inherits AsyncSocket
+it's send method does the following 
+
+its send is just a formatter
+but why does it use the backpressure buffer in the forammter 

@@ -117,7 +117,7 @@ decltype(auto) Client<Socket>::send_impl(std::span<const uint8_t> msg,
             if (m_state != ConnectionState::Open) {
                 co_return std::unexpected(Error::InvalidState);
             }
-            detail::ChunkFormatter fmt{msg, first_op, m_rng};
+            detail::ChunkFormatter<false> fmt{msg, first_op, &m_rng};
             while (fmt.has_next()) {
                 auto [meta, payload] = fmt.next();
                 auto metas           = meta.span();
@@ -137,7 +137,7 @@ decltype(auto) Client<Socket>::send_impl(std::span<const uint8_t> msg,
             if (m_state != ConnectionState::Open) {
                 return std::unexpected(Error::InvalidState);
             }
-            detail::ChunkFormatter fmt{msg, first_op, m_rng};
+            detail::ChunkFormatter<false> fmt{msg, first_op, &m_rng};
             while (fmt.has_next()) {
                 auto [meta, payload] = fmt.next();
                 auto metas           = meta.span();
