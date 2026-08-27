@@ -71,3 +71,4 @@ Testing/
 venv/
 
 autobahn/reports/
+vendor/simdutf/
