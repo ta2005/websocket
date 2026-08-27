@@ -69,3 +69,5 @@ vcpkg_installed/
 Testing/
 .cache/
 venv/
+
+autobahn/reports/

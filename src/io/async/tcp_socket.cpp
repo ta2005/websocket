@@ -7,7 +7,9 @@
 
 namespace ws::async {
 
-TcpSocket::TcpSocket(int fd, EventLoop &loop) : m_fd(fd), m_loop(loop) {}
+TcpSocket::TcpSocket(int fd, EventLoop &loop) : m_fd(fd), m_loop(loop) {
+    m_loop.register_socket(this);
+}
 
 TcpSocket::~TcpSocket() { close(); }
 

@@ -1,5 +1,7 @@
 #include "client.hpp"
-#include "io/tcp_socket.hpp"
+// #include "io/tcp_socket.hpp"
+#include "io/async/tcp_socket.hpp"
+#include "session.hpp"
 #include "task.hpp"
 #include <iostream>
 #include <string_view>
@@ -19,7 +21,7 @@ int main() {
     // Connect the raw TCP socket
     auto sock_res = TcpSocket::connect(host, port);
     if (!sock_res) {
-        std::cerr << "[-] Failed to connect TCP socket. Is the Python server "
+        std::cerr << "[-] Failed to connect TCP socket. Is the Python server"
                      "running?\n";
         return 1;
     }
@@ -51,7 +53,7 @@ int main() {
 
     // Wait for the echo response
     std::cout << "[4] Waiting for response from server ...\n";
-    auto chunk = client.read_chunk();
+    auto chunk = client.read_message();
     if (!chunk) {
         std::cerr << "[-] Failed to read chunk from server.\n";
         return 1;
@@ -62,7 +64,8 @@ int main() {
         chunk->payload.size());
 
     std::cout << "[+] Server replied: \"" << received_payload << "\"\n";
-    std::cout << "[+] Frame FIN: " << std::boolalpha << chunk->is_fin << "\n";
+    std::cout << "[+] Frame FIN: " << std::boolalpha << chunk->is_fin <<
+    "\n";
     // client.close();
 
     std::cout << "\n=========================================\n";

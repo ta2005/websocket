@@ -10,6 +10,8 @@
 namespace ws::detail {
 
 struct FrameHeader {
+    //this could be optimzed a bit depending wheter we are a server or
+    //a clinet
     std::array<uint8_t, 14> data;
     size_t                  size;
 

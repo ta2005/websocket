@@ -171,3 +171,5 @@ it's send method does the following
 
 its send is just a formatter
 but why does it use the backpressure buffer in the forammter 
+
+I now fully understand all of it's trick and will do my best to make the best performant  websocket connection i can

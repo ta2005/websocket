@@ -4,12 +4,14 @@
 #include "common/details/mask_payload.hpp"
 #include "common/details/prepare_meta.hpp"
 #include "common/opcode.hpp"
+#include "common/roles.hpp"
 #include <random>
+#include <iostream>
 #include <span>
 
 namespace ws::detail {
 // this should be an enum but whaterver
-template <bool isServer> struct ChunkFormatter {
+template <Role R> struct ChunkFormatter {
     static constexpr int            chunk_size = 8 * 1024;
     std::span<const uint8_t>        remaining;
     opcode                          first_op;
@@ -23,11 +25,11 @@ template <bool isServer> struct ChunkFormatter {
         opcode op        = is_first ? first_op : opcode::continuation;
         is_first         = false;
         uint32_t mask;
-        if constexpr (isServer) {
+        if constexpr (R == Role::Client) {
             mask = (*rng)();
         }
-        auto meta = [&]() {
-            if constexpr (isServer) {
+        const FrameHeader meta = [&]() {
+            if constexpr (R == Role::Client) {
                 return format_meta(is_final, true, op, chunk_len, mask);
             } else {
                 return format_meta(is_final, false, op, chunk_len, 0);
@@ -36,7 +38,7 @@ template <bool isServer> struct ChunkFormatter {
         std::copy(remaining.begin(), remaining.begin() + chunk_len,
                   tmp_buf.begin());
         auto payload_span = std::span<uint8_t>{tmp_buf.data(), chunk_len};
-        if constexpr (!isServer) {
+        if constexpr (R == Role::Client) {
             mask_payload(payload_span, mask);
         }
 
