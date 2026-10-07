@@ -5,8 +5,8 @@
 #include "common/details/prepare_meta.hpp"
 #include "common/opcode.hpp"
 #include "common/roles.hpp"
-#include <random>
 #include <iostream>
+#include <random>
 #include <span>
 
 namespace ws::detail {

@@ -173,3 +173,11 @@ its send is just a formatter
 but why does it use the backpressure buffer in the forammter 
 
 I now fully understand all of it's trick and will do my best to make the best performant  websocket connection i can
+
+
+ok ther perf needs i will do :
+I will start with the read
+make the event_loop handles in the ptf field not in the map
+first the read_awaitble should lie and return data simply from the deque in the socket 
+and have the event_loop hanlde should be another type 
+so maybe I will have a socket awaitable and a websocket 

@@ -1,0 +1,4 @@
+schema: "4.2"
+headers:
+  enabled: true               # default: false
+  strategy: dependency-files

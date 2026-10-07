@@ -6,10 +6,10 @@
 #include <algorithm>
 #include <expected>
 #include <format>
+#include <iostream>
 #include <string>
 #include <string_view>
 #include <vector>
-#include <iostream>
 
 namespace ws {
 // i will first assuem no erros then will see later on
@@ -188,16 +188,19 @@ decltype(auto) send_handshake(Socket &socket, const std::string_view host,
                             "Sec-WebSocket-Version: 13\r\n"
                             "\r\n",
                             path, host, port);
-            std::cout << "[Client] Sending handshake request:\n" << req << std::endl;
+            std::cout << "[Client] Sending handshake request:\n"
+                      << req << std::endl;
             auto out = co_await static_cast<S &>(socket).write(
                 std::span<const uint8_t>{},
                 std::span<const uint8_t>{
                     reinterpret_cast<const uint8_t *>(req.data()), req.size()});
             if (!out) {
-                std::cerr << "[Client] Error sending handshake: " << static_cast<int>(out.error()) << "\n";
+                std::cerr << "[Client] Error sending handshake: "
+                          << static_cast<int>(out.error()) << "\n";
                 co_return std::unexpected(out.error());
             }
-            std::cout << "[Client] Handshake request sent successfully (" << *out << " bytes).\n";
+            std::cout << "[Client] Handshake request sent successfully ("
+                      << *out << " bytes).\n";
             co_return {};
         },
         [&socket, host, path,
@@ -211,16 +214,19 @@ decltype(auto) send_handshake(Socket &socket, const std::string_view host,
                             "Sec-WebSocket-Version: 13\r\n"
                             "\r\n",
                             path, host, port);
-            std::cout << "[Client] [Sync] Sending handshake request:\n" << req << std::endl;
+            std::cout << "[Client] [Sync] Sending handshake request:\n"
+                      << req << std::endl;
             auto out = socket.write(
                 std::span<const uint8_t>{},
                 std::span<const uint8_t>{
                     reinterpret_cast<const uint8_t *>(req.data()), req.size()});
             if (!out) {
-                std::cerr << "[Client] [Sync] Error sending handshake: " << static_cast<int>(out.error()) << "\n";
+                std::cerr << "[Client] [Sync] Error sending handshake: "
+                          << static_cast<int>(out.error()) << "\n";
                 return std::unexpected(out.error());
             }
-            std::cout << "[Client] [Sync] Handshake request sent successfully (" << *out << " bytes).\n";
+            std::cout << "[Client] [Sync] Handshake request sent successfully ("
+                      << *out << " bytes).\n";
             return {};
         });
 }
@@ -242,24 +248,29 @@ decltype(auto) perform_handshake(Socket &socket, const std::string_view host,
             auto actual_size = co_await static_cast<S &>(socket).read(
                 std::span{buffer.data(), buffer.size()});
             if (!actual_size) {
-                std::cerr << "[Client] Error reading handshake response: " << static_cast<int>(actual_size.error()) << "\n";
+                std::cerr << "[Client] Error reading handshake response: "
+                          << static_cast<int>(actual_size.error()) << "\n";
                 co_return std::unexpected(actual_size.error());
             }
-            std::cout << "[Client] Received " << *actual_size << " bytes for handshake response.\n";
+            std::cout << "[Client] Received " << *actual_size
+                      << " bytes for handshake response.\n";
             std::string_view header_view{
                 reinterpret_cast<const char *>(buffer.data()), *actual_size};
-            
+
             std::cout << "[Client] Response Header:\n" << header_view << "\n";
 
             auto parsed_header = parse_headers(header_view);
             if (!parsed_header) {
-                std::cerr << "[Client] Failed to parse headers. Error: " << static_cast<int>(parsed_header.error()) << "\n";
+                std::cerr << "[Client] Failed to parse headers. Error: "
+                          << static_cast<int>(parsed_header.error()) << "\n";
                 co_return std::unexpected(parsed_header.error());
             }
-            std::cout << "[Client] Handshake parsing successful. Status code: " << parsed_header->first.line.status << "\n";
+            std::cout << "[Client] Handshake parsing successful. Status code: "
+                      << parsed_header->first.line.status << "\n";
             if (parsed_header->second != *actual_size) {
                 size_t msg_len = *actual_size - parsed_header->second;
-                std::cout << "[Client] Found " << msg_len << " leftover bytes after headers.\n";
+                std::cout << "[Client] Found " << msg_len
+                          << " leftover bytes after headers.\n";
                 parsed_header->first.leftover.reserve(msg_len);
                 parsed_header->first.leftover.assign(
                     buffer.begin() + parsed_header->second,
@@ -278,24 +289,32 @@ decltype(auto) perform_handshake(Socket &socket, const std::string_view host,
             auto                          actual_size =
                 socket.read(std::span{buffer.data(), buffer.size()});
             if (!actual_size) {
-                std::cerr << "[Client] [Sync] Error reading handshake response: " << static_cast<int>(actual_size.error()) << "\n";
+                std::cerr
+                    << "[Client] [Sync] Error reading handshake response: "
+                    << static_cast<int>(actual_size.error()) << "\n";
                 return std::unexpected(actual_size.error());
             }
-            std::cout << "[Client] [Sync] Received " << *actual_size << " bytes for handshake response.\n";
+            std::cout << "[Client] [Sync] Received " << *actual_size
+                      << " bytes for handshake response.\n";
             std::string_view header_view{
                 reinterpret_cast<const char *>(buffer.data()), *actual_size};
-            
-            std::cout << "[Client] [Sync] Response Header:\n" << header_view << "\n";
+
+            std::cout << "[Client] [Sync] Response Header:\n"
+                      << header_view << "\n";
 
             auto parsed_header = parse_headers(header_view);
             if (!parsed_header) {
-                std::cerr << "[Client] [Sync] Failed to parse headers. Error: " << static_cast<int>(parsed_header.error()) << "\n";
+                std::cerr << "[Client] [Sync] Failed to parse headers. Error: "
+                          << static_cast<int>(parsed_header.error()) << "\n";
                 return std::unexpected(parsed_header.error());
             }
-            std::cout << "[Client] [Sync] Handshake parsing successful. Status code: " << parsed_header->first.line.status << "\n";
+            std::cout
+                << "[Client] [Sync] Handshake parsing successful. Status code: "
+                << parsed_header->first.line.status << "\n";
             if (parsed_header->second != *actual_size) {
                 size_t msg_len = *actual_size - parsed_header->second;
-                std::cout << "[Client] [Sync] Found " << msg_len << " leftover bytes after headers.\n";
+                std::cout << "[Client] [Sync] Found " << msg_len
+                          << " leftover bytes after headers.\n";
                 parsed_header->first.leftover.reserve(msg_len);
                 parsed_header->first.leftover.assign(
                     buffer.begin() + parsed_header->second,

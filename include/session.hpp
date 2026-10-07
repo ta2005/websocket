@@ -13,10 +13,10 @@
 #include "simdutf.h"
 #include "task.hpp"
 #include <cstdint>
+#include <iostream>
 #include <random>
 #include <string_view>
 #include <vector>
-#include <iostream>
 
 namespace ws {
 
@@ -106,7 +106,7 @@ class Session {
     decltype(auto) send(std::span<const uint8_t>);
     decltype(auto) send(const std::string_view);
     decltype(auto) read_message();
-    decltype(auto)    close();
+    decltype(auto) close();
 
     // this create will be connect for the client
     // and  for the server It will simply be
@@ -216,20 +216,27 @@ decltype(auto) Session<Socket, R>::send_impl(std::span<const uint8_t> msg,
             if (m_state != ConnectionState::Open) {
                 co_return std::unexpected(Error::InvalidState);
             }
-            std::cout << "[Session] Formatting message (opcode: " << static_cast<int>(first_op) << ", size: " << msg.size() << ")\n";
+            std::cout << "[Session] Formatting message (opcode: "
+                      << static_cast<int>(first_op) << ", size: " << msg.size()
+                      << ")\n";
             detail::ChunkFormatter<R> fmt{msg, first_op, &m_rng};
             while (fmt.has_next()) {
                 auto [meta, payload] = fmt.next();
                 auto metas           = meta.span();
-                std::cout << "[Session] Sending frame chunk (header: " << metas.size() << metas.data() << " bytes, payload: " << payload.size() << " bytes)\n";
+                std::cout << "[Session] Sending frame chunk (header: "
+                          << metas.size() << metas.data()
+                          << " bytes, payload: " << payload.size()
+                          << " bytes)\n";
                 while (!(metas).empty() || !payload.empty()) {
                     auto n = co_await static_cast<S &>(m_socket).write(metas,
                                                                        payload);
                     if (!n) {
-                        std::cerr << "[Session] Error writing to socket: " << static_cast<int>(n.error()) << "\n";
+                        std::cerr << "[Session] Error writing to socket: "
+                                  << static_cast<int>(n.error()) << "\n";
                         co_return std::unexpected(n.error());
                     }
-                    std::cout << "[Session] Wrote " << *n << " bytes to socket\n";
+                    std::cout << "[Session] Wrote " << *n
+                              << " bytes to socket\n";
                     detail::advance_span(metas, payload, *n);
                 }
             }
@@ -240,19 +247,27 @@ decltype(auto) Session<Socket, R>::send_impl(std::span<const uint8_t> msg,
             if (m_state != ConnectionState::Open) {
                 return std::unexpected(Error::InvalidState);
             }
-            std::cout << "[Session] [Sync] Formatting message (opcode: " << static_cast<int>(first_op) << ", size: " << msg.size() << ")\n";
+            std::cout << "[Session] [Sync] Formatting message (opcode: "
+                      << static_cast<int>(first_op) << ", size: " << msg.size()
+                      << ")\n";
             detail::ChunkFormatter<R> fmt{msg, first_op, &m_rng};
             while (fmt.has_next()) {
                 auto [meta, payload] = fmt.next();
                 auto metas           = meta.span();
-                std::cout << "[Session] [Sync] Sending frame chunk (header: " << metas.size() << " bytes, payload: " << payload.size() << " bytes)\n";
+                std::cout << "[Session] [Sync] Sending frame chunk (header: "
+                          << metas.size()
+                          << " bytes, payload: " << payload.size()
+                          << " bytes)\n";
                 while (!(metas).empty() || !payload.empty()) {
                     auto n = m_socket.write(metas, payload);
                     if (!n) {
-                        std::cerr << "[Session] [Sync] Error writing to socket: " << static_cast<int>(n.error()) << "\n";
+                        std::cerr
+                            << "[Session] [Sync] Error writing to socket: "
+                            << static_cast<int>(n.error()) << "\n";
                         return std::unexpected(n.error());
                     }
-                    std::cout << "[Session] [Sync] Wrote " << *n << " bytes to socket\n";
+                    std::cout << "[Session] [Sync] Wrote " << *n
+                              << " bytes to socket\n";
                     detail::advance_span(metas, payload, *n);
                 }
             }
@@ -443,24 +458,27 @@ Session<Socket, R>::read_chunk_impl(size_t first_read) {
             -> Task<std::expected<ChunkView, Error>> {
             auto &buffer = current_read.data;
             std::cout << "[Session] Reading frame header...\n";
-            auto  parsed_meta_res =
-                co_await static_cast<Session<S,R> *>(this)->read_header(
+            auto parsed_meta_res =
+                co_await static_cast<Session<S, R> *>(this)->read_header(
                     first_read);
 
             if (!parsed_meta_res) {
-                std::cerr << "[Session] Failed to read header: " << static_cast<int>(parsed_meta_res.error()) << "\n";
+                std::cerr << "[Session] Failed to read header: "
+                          << static_cast<int>(parsed_meta_res.error()) << "\n";
                 // fail_connection(get_status_code(parsed_meta_res.error()));
                 co_return std::unexpected(parsed_meta_res.error());
             }
-            std::cout << "[Session] Parsed header (opcode: " << static_cast<int>(parsed_meta_res->op) 
-                      << ", fin: " << parsed_meta_res->fin 
+            std::cout << "[Session] Parsed header (opcode: "
+                      << static_cast<int>(parsed_meta_res->op)
+                      << ", fin: " << parsed_meta_res->fin
                       << ", payload_len: " << parsed_meta_res->len << ")\n";
 
             auto payload_res =
-                co_await static_cast<Session<S,R> *>(this)->read_payload(
+                co_await static_cast<Session<S, R> *>(this)->read_payload(
                     *parsed_meta_res);
             if (!payload_res) {
-                std::cerr << "[Session] Failed to read payload: " << static_cast<int>(payload_res.error()) << "\n";
+                std::cerr << "[Session] Failed to read payload: "
+                          << static_cast<int>(payload_res.error()) << "\n";
                 co_return std::unexpected(payload_res.error());
             }
             std::cout << "[Session] Successfully read full payload.\n";
@@ -475,22 +493,25 @@ Session<Socket, R>::read_chunk_impl(size_t first_read) {
         // --- SYNC PATH ---
         [this,
          first_read]<typename S = Socket>() -> std::expected<ChunkView, Error> {
-            auto &buffer          = current_read.data;
+            auto &buffer = current_read.data;
             std::cout << "[Session] [Sync] Reading frame header...\n";
-            auto  parsed_meta_res = read_header(first_read);
+            auto parsed_meta_res = read_header(first_read);
 
             if (!parsed_meta_res) {
-                std::cerr << "[Session] [Sync] Failed to read header: " << static_cast<int>(parsed_meta_res.error()) << "\n";
+                std::cerr << "[Session] [Sync] Failed to read header: "
+                          << static_cast<int>(parsed_meta_res.error()) << "\n";
                 // fail_connection(get_status_code(parsed_meta_res.error()));
                 return std::unexpected(parsed_meta_res.error());
             }
-            std::cout << "[Session] [Sync] Parsed header (opcode: " << static_cast<int>(parsed_meta_res->op) 
-                      << ", fin: " << parsed_meta_res->fin 
+            std::cout << "[Session] [Sync] Parsed header (opcode: "
+                      << static_cast<int>(parsed_meta_res->op)
+                      << ", fin: " << parsed_meta_res->fin
                       << ", payload_len: " << parsed_meta_res->len << ")\n";
 
             auto payload_res = read_payload(*parsed_meta_res);
             if (!payload_res) {
-                std::cerr << "[Session] [Sync] Failed to read payload: " << static_cast<int>(payload_res.error()) << "\n";
+                std::cerr << "[Session] [Sync] Failed to read payload: "
+                          << static_cast<int>(payload_res.error()) << "\n";
                 return std::unexpected(payload_res.error());
             }
             std::cout << "[Session] [Sync] Successfully read full payload.\n";
@@ -517,7 +538,7 @@ Session<Socket, R>::read_chunk() {
             buffer.resize(chunk_size);
             auto first_read = co_await static_cast<S &>(m_socket).read(
                 {buffer.data(), buffer.size()});
-	    // this is either my best or worst idea
+            // this is either my best or worst idea
             if (!first_read) {
                 co_return std::unexpected(first_read.error());
             }

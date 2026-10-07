@@ -1,4 +1,4 @@
-CXX      := g++
+nCXX      := g++
 CXXFLAGS := -std=c++23 -Wall -Wextra -Wpedantic -ggdb -fsanitize=address,undefined 
 CPPFLAGS := -Iinclude -Iinclude/common -Iinclude/common/details -Iinclude/io -Iinclude/io/async -Ivendor -MMD -MP
 LDFLAGS  :=

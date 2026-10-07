@@ -3,10 +3,7 @@
 #include <unistd.h>
 
 namespace ws::async {
-EventLoop::EventLoop(int fd) : m_epollfd{fd} {
-    // I think this is the max theortical but I might be wrong
-    m_handles.resize(1 << 16);
-}
+EventLoop::EventLoop(int fd) : m_epollfd{fd} {}
 EventLoop::~EventLoop() {
     if (m_epollfd != -1) {
         close(m_epollfd);
@@ -27,7 +24,6 @@ EventLoop::EventLoop(EventLoop &&rhs) : m_epollfd(rhs.m_epollfd) {
 }
 
 EventLoop &EventLoop::operator=(EventLoop &&rhs) {
-    // I don't know about this one and wheter the vector will be dangling
     if (this != &rhs) {
         if (m_epollfd != -1) {
             close(m_epollfd);
@@ -35,31 +31,19 @@ EventLoop &EventLoop::operator=(EventLoop &&rhs) {
         this->m_epollfd = rhs.m_epollfd;
         rhs.m_epollfd   = -1;
     }
-    this->m_handles = std::move(rhs.m_handles);
-    rhs.m_handles.clear();
     return *this;
 }
 
-void EventLoop::unregister_socket(TcpSocket &socket) {
-    m_handles[socket.get_fd()].read_handle  = nullptr;
-    m_handles[socket.get_fd()].write_handle = nullptr;
+void EventLoop::unregister_socket(int fd) {
+    epoll_ctl(m_epollfd, EPOLL_CTL_DEL, fd, nullptr);
 }
 
-void EventLoop::register_read(TcpSocket &socket, Handle h) {
-    m_handles[socket.get_fd()].read_handle = h;
-}
-
-void EventLoop::register_write(TcpSocket &socket, Handle h) {
-    m_handles[socket.get_fd()].write_handle = h;
-}
-
-std::expected<void, Error> EventLoop::register_socket(TcpSocket &socket) {
+std::expected<void, Error> EventLoop::register_socket(int fd, SocketCtx *ctx) {
     epoll_event ev{};
     // No EPOLLONESHOT needed for single-threaded EPOLLET!
     // We register for IN, OUT, and RDHUP right from the start.
-    ev.events  = EPOLLET | EPOLLIN | EPOLLOUT | EPOLLRDHUP;
-    auto fd    = socket.get_fd();
-    ev.data.fd = fd;
+    ev.events   = EPOLLET | EPOLLIN | EPOLLOUT | EPOLLRDHUP;
+    ev.data.ptr = ctx;
 
     if (epoll_ctl(m_epollfd, EPOLL_CTL_ADD, fd, &ev) < 0) {
         return std::unexpected(ws::Error::ReadFailed);
@@ -71,19 +55,19 @@ void EventLoop::run() {
     epoll_event events[64];
     int         nfds = epoll_wait(m_epollfd, events, 64, -1);
     for (int i = 0; i < nfds; i++) {
-        uint32_t revents = events[i].events;
-        auto     fd      = events[i].data.fd;
+        uint32_t   revents = events[i].events;
+        SocketCtx *ctx     = static_cast<SocketCtx *>(events[i].data.ptr);
 
         if (revents & (EPOLLIN | EPOLLHUP | EPOLLERR | EPOLLRDHUP)) {
-            if (auto h = m_handles[fd].read_handle) {
-                m_handles[fd].read_handle = nullptr; // consume
+            if (auto h = ctx->read_handle) {
+                ctx->read_handle = nullptr; // consume
                 h.resume();
             }
         }
 
         if (revents & EPOLLOUT) {
-            if (auto h = m_handles[fd].write_handle) {
-                m_handles[fd].write_handle = nullptr; // consume
+            if (auto h = ctx->write_handle) {
+                ctx->write_handle = nullptr; // consume
                 h.resume();
             }
         }

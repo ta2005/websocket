@@ -2,8 +2,8 @@
 #define CLIENT_HPP
 
 #include "common/concepts.hpp"
-#include "common/roles.hpp"
 #include "common/details/dispatch.hpp"
+#include "common/roles.hpp"
 #include "handshake.hpp"
 #include "session.hpp"
 #include "task.hpp"
@@ -11,8 +11,7 @@
 
 namespace ws {
 
-template <typename Socket> 
-class Client : public Session<Socket, Role::Client> {
+template <typename Socket> class Client : public Session<Socket, Role::Client> {
     template <typename T>
     using Result =
         std::conditional_t<isAsyncSocket<Socket>, Task<std::expected<T, Error>>,
@@ -41,7 +40,7 @@ decltype(auto) Client<Socket>::create(Socket s, const std::string_view host,
             }
             Client<Socket> client(std::move(s));
             if (!hs_res->leftover.empty()) {
-                client.current_read.data = std::move(hs_res->leftover);
+                client.current_read.data          = std::move(hs_res->leftover);
                 client.current_read.remaing_bytes = 0;
             }
             co_return client;

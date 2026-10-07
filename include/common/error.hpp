@@ -48,6 +48,7 @@ enum class Error {
     // Async
     EventLoopInitFailed,
     RegisterFailed,
+    InvalidSize,
 };
 
 constexpr status_code get_status_code(Error e) {

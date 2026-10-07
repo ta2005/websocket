@@ -11,9 +11,11 @@ using Handle = std::coroutine_handle<>;
 
 namespace ws::async {
 struct SocketCtx {
+    int fd;
     Handle read_handle;
     Handle write_handle;
 };
+
 class EventLoop {
   public:
     EventLoop(EventLoop &)            = delete;
@@ -26,23 +28,12 @@ class EventLoop {
     void run();
     auto get_fd() { return m_epollfd; }
 
-    // this will change when i create the
-    // tcp class
-    std::expected<void, Error> register_socket(TcpSocket &);
-    void                       unregister_socket(TcpSocket &);
-    void                       register_read(TcpSocket &, Handle);
-    void                       register_write(TcpSocket &, Handle);
-    // void rearm(SocketCtx &, uint32_t);
+    std::expected<void, Error> register_socket(int fd, SocketCtx *ctx);
+    void                       unregister_socket(int fd);
 
   private:
     EventLoop(int fd);
     int m_epollfd;
-    // this could also take an unordered map
-    // of tcpsocket
-    // and the hash method is get_fd
-    //  it will get the same perf
-    //  but with better semantics
-    std::vector<SocketCtx> m_handles;
 };
 } // namespace ws::async
 
